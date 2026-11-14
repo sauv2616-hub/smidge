@@ -95,8 +95,9 @@ main{flex:1;width:100%;max-width:460px;margin:0 auto;padding:14px 18px calc(18px
 .rounds div.s-bad{background:var(--bad);color:#fff}
 .kind{font:400 17px/1 var(--display);letter-spacing:.04em;opacity:.65;margin-bottom:2px}
 .prompt{font:400 clamp(23px,6.6vw,29px)/1.1 var(--display);min-height:2.1em;margin-bottom:10px;text-wrap:balance}
+.stagewrap .ink-s{stroke:#7B4A2D}
 .stagewrap{position:relative;width:100%;max-width:min(100%,48dvh);margin:0 auto;aspect-ratio:1;background:var(--paper);
-  border:2.5px solid var(--ink);border-radius:18px;box-shadow:0 6px 0 var(--ink);overflow:hidden}
+  border:4px solid #7B4A2D;border-radius:22px;box-shadow:0 6px 0 #6B3F22;overflow:hidden}
 .stagewrap svg{display:block;width:100%;height:100%;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
 .stagewrap.locked svg{cursor:default}
 svg text{font-family:var(--display);font-weight:400}
@@ -353,7 +354,7 @@ function dragger(svg, h) {
   svg.addEventListener('pointerup', up); svg.addEventListener('pointercancel', up);
 }
 function label(svg, x, y, txt, fill, size = 18, anchor = 'middle') {
-  const t = S('text', { x, y, fill, 'font-size': size, 'text-anchor': anchor, class: 'pop', 'paint-order': 'stroke', stroke: '#FFFBF2', 'stroke-width': 5, 'stroke-linejoin': 'round' }, svg);
+  const t = S('text', { x, y, fill, 'font-size': size, 'text-anchor': anchor, class: 'pop', 'paint-order': 'stroke', stroke: '#FFFBF2', 'stroke-width': 6, 'stroke-linejoin': 'round' }, TOP || svg);
   t.textContent = txt; return t;
 }
 
@@ -386,6 +387,17 @@ function ticker(fn) { let raf, last = performance.now(), t0 = last, live = true;
    Each one: gen(rng) -> params, prompt(params), mount(api, params) -> instance, score(params, answer) -> {err, off}
    A round's score is 100 * exp(-err / tau): err 0 is a perfect 100, err = tau is about 37. */
 const CH = {};
+const OUT = '#7B4A2D';
+const P = (parent, d, fill, extra) => S('path', Object.assign({ d, fill, stroke: OUT, 'stroke-width': 4.5, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }, extra || {}), parent);
+const shine = (parent, d, w, op) => S('path', { d, fill: 'none', stroke: '#fff', 'stroke-width': w || 4, 'stroke-linecap': 'round', opacity: op || .6 }, parent);
+const shadow = (parent, cx, cy, rx, ry) => S('ellipse', { cx, cy, rx, ry, fill: '#5B3A22', opacity: .2 }, parent);
+function backdrop(g, kind) { g.innerHTML = '';
+  if (kind === 'wood') { S('rect', { width: 320, height: 320, fill: '#DDB07C' }, g); for (let y = 64; y < 320; y += 64) S('line', { x1: 0, y1: y, x2: 320, y2: y, stroke: '#C08E57', 'stroke-width': 3 }, g);
+    for (let k = 0; k < 26; k++) { const x = (k * 97) % 300, y = (k * 53) % 310 + 6; S('path', { d: `M${x},${y}q${14 + k % 3 * 8},${k % 2 ? 3 : -3} ${30 + k % 4 * 10},0`, fill: 'none', stroke: '#CE9E68', 'stroke-width': 2, 'stroke-linecap': 'round' }, g); } }
+  else if (kind === 'steel') { S('rect', { width: 320, height: 320, fill: '#E4DED2' }, g); S('rect', { x: 10, y: 10, width: 300, height: 300, rx: 16, fill: '#EFEAE0', stroke: '#CFC6B6', 'stroke-width': 3 }, g); [[26, 26], [294, 26], [26, 294], [294, 294]].forEach(([x, y]) => S('circle', { cx: x, cy: y, r: 5, fill: '#CFC6B6' }, g)); }
+  else if (kind === 'tray') { S('rect', { width: 320, height: 320, fill: '#AEB5BC' }, g); S('rect', { x: 8, y: 8, width: 304, height: 304, rx: 18, fill: '#C3C9CF' }, g); S('rect', { x: 16, y: 16, width: 288, height: 288, rx: 10, fill: '#F6ECD8' }, g); S('path', { d: 'M16,90h288M16,200h288', stroke: '#EADDC2', 'stroke-width': 2 }, g); }
+  else { S('rect', { width: 320, height: 320, fill: '#F8EEDD' }, g); for (let y = 12; y < 320; y += 44) S('rect', { x: 0, y, width: 320, height: 20, fill: '#EEDFC8' }, g); } }
+let TOP = null;
 const OIL = '#E2B100', DOUGH = '#F3D9A4', CRUST = '#B8742E', CHOC = '#4A2A18';
 
 CH.pour = {
@@ -395,13 +407,19 @@ CH.pour = {
   prompt: p => `Pour exactly ${p.ml} ml of olive oil.`,
   mount(api, p) {
     const svg = api.svg; let v = 0, started = false, glug = 0;
-    const bottle = S('g', {}, svg);
-    S('path', { d: 'M146,60h28v34c0,12 26,22 26,52v110a14,14 0 0 1 -14,14h-52a14,14 0 0 1 -14,-14v-110c0,-30 26,-40 26,-52z', fill: '#7C8F3A', class: 'ink-s', 'stroke-width': 5 }, bottle).style.fill = '#7C8F3A';
-    S('rect', { x: 142, y: 44, width: 36, height: 18, rx: 4, fill: INK }, bottle);
+    api.bg('cloth'); P(svg, 'M36,284h248a9,9 0 0 1 0,18h-248a9,9 0 0 1 0,-18z', '#C98F5A'); shine(svg, 'M52,290h90', 3, .35);
+    const bottle = S('g', {}, svg); shadow(bottle, 160, 282, 62, 8);
+    P(bottle, 'M146,62h28v30c0,14 28,22 28,54v108a16,16 0 0 1 -16,16h-52a16,16 0 0 1 -16,-16v-108c0,-32 28,-40 28,-54z', '#93A84E');
+    S('path', { d: 'M121,168h78v86a13,13 0 0 1 -13,13h-52a13,13 0 0 1 -13,-13z', fill: OIL, opacity: .8 }, bottle);
+    P(bottle, 'M127,188h66v50h-66z', '#FFF6E4', { 'stroke-width': 3 }); S('ellipse', { cx: 150, cy: 213, rx: 9, ry: 12, fill: '#5E7A2E', transform: 'rotate(-20 150 213)' }, bottle); S('circle', { cx: 147, cy: 208, r: 2.5, fill: '#fff', opacity: .6 }, bottle);
+    P(bottle, 'M160,204q18,-12 26,4q-16,10 -26,-4z', '#7FA03C', { 'stroke-width': 2.5 }); S('path', { d: 'M136,230h48', stroke: OUT, 'stroke-width': 2, 'stroke-linecap': 'round' }, bottle);
+    P(bottle, 'M141,60h38v10h-38z', '#6F8436', { 'stroke-width': 3 }); P(bottle, 'M145,38h30l-3,24h-24z', '#D2A56B'); S('path', { d: 'M150,46h20M151,53h18', stroke: '#B88A52', 'stroke-width': 2 }, bottle);
+    shine(bottle, 'M132,150v96', 6, .45); shine(bottle, 'M152,70v18', 4, .5);
+
     const stream = S('line', { x1: 160, y1: 160, x2: 160, y2: 160, stroke: OIL, 'stroke-width': 26, 'stroke-linecap': 'round', visibility: 'hidden' }, svg);
     const word = label(svg, 160, 306, '', INK, 24);
     api.btn('Tip to pour', false);
-    if (Sense.sim) { Sense.s.tilt = 0; dragger(svg, { move: (q, d) => { Sense.s.tilt = clamp(Sense.s.tilt + d.y * 1.3, 0, 180); }, up: () => { Sense.s.tilt = 0; } }); }
+    if (Sense.sim) { Sense.s.tilt = 0; dragger(api.root, { move: (q, d) => { Sense.s.tilt = clamp(Sense.s.tilt + d.y * 1.3, 0, 180); }, up: () => { Sense.s.tilt = 0; } }); }
     const stop = ticker(dt => {
       const t = Sense.tilt(); if (Sense.sim) bottle.setAttribute('transform', `rotate(${t} 160 165)`);
       if (t > 90) { const rate = 26 * (t - 90) / 90 + 1.5; v = Math.min(400, v + rate * dt); started = true;
@@ -413,9 +431,11 @@ CH.pour = {
     });
     return {
       ready: () => false, answer: () => v,
-      reveal() { stop(); svg.innerHTML = ''; const top = 46, bot = 282, H = bot - top, max = Math.max(p.ml, v) * 1.3, y = q => bot - q / max * H;
-        S('rect', { x: 112, y: y(v), width: 96, height: bot - y(v), fill: OIL, class: 'pop' }, svg);
-        S('path', { d: `M110,${top}V${bot}H210V${top}`, class: 'ink-s', 'stroke-width': 5 }, svg);
+      reveal() { stop(); svg.innerHTML = ''; word.textContent = ''; const top = 46, bot = 282, H = bot - top, max = Math.max(p.ml, v) * 1.3, y = q => bot - q / max * H;
+        shadow(svg, 160, bot + 6, 78, 9); S('path', { d: 'M208,96h30a16,16 0 0 1 16,16v78a16,16 0 0 1 -16,16h-30', fill: 'none', stroke: OUT, 'stroke-width': 16, 'stroke-linecap': 'round' }, svg); S('path', { d: 'M208,96h30a16,16 0 0 1 16,16v78a16,16 0 0 1 -16,16h-30', fill: 'none', stroke: '#E4F0EE', 'stroke-width': 8, 'stroke-linecap': 'round' }, svg);
+        S('path', { d: `M110,${top}V${bot}H210V${top}z`, fill: '#EAF4F2' }, svg);
+        S('rect', { x: 112, y: y(v), width: 96, height: bot - y(v), fill: OIL, class: 'pop' }, svg); S('ellipse', { cx: 160, cy: y(v), rx: 47, ry: 5, fill: '#F4D24A', class: 'pop' }, svg);
+        P(svg, `M110,${top}l-16,-8l16,24`, '#EAF4F2'); S('path', { d: `M110,${top}V${bot - 8}a8,8 0 0 0 8,8H202a8,8 0 0 0 8,-8V${top}`, fill: 'none', stroke: OUT, 'stroke-width': 5, 'stroke-linecap': 'round' }, svg); shine(svg, `M196,${top + 16}V${bot - 20}`, 6, .55);
         for (let i = 1; i < 8; i++) { const yy = bot - i * H / 8; S('line', { x1: 112, y1: yy, x2: i % 2 ? 126 : 136, y2: yy, stroke: INK, 'stroke-width': 2 }, svg); }
         S('line', { x1: 92, y1: y(p.ml), x2: 228, y2: y(p.ml), class: 'truth-s pop', 'stroke-width': 3, 'stroke-dasharray': '7 6' }, svg);
         label(svg, 236, y(p.ml) + 6, `${p.ml} ml`, TRUTH, 20, 'start'); label(svg, 84, y(v) + 6, `${Math.round(v)}`, YOU, 22, 'end'); },
@@ -432,18 +452,18 @@ CH.dial = {
   prompt: p => `Turn the oven dial to exactly ${p.deg}°.`,
   mount(api, p) {
     const svg = api.svg; let a = 0, ok = false;
-    const knob = S('g', {}, svg);
-    S('circle', { cx: 160, cy: 160, r: 118, fill: '#EFE6D6', class: 'ink-s', 'stroke-width': 5 }, knob).style.fill = '#EFE6D6';
-    S('circle', { cx: 160, cy: 160, r: 74, fill: INK }, knob);
-    S('rect', { x: 153, y: 50, width: 14, height: 62, rx: 7, fill: TRUTH }, knob);
+    api.bg('steel'); P(svg, 'M160,30l11,-18h-22z', '#F2B63C'); const knob = S('g', {}, svg);
+    S('circle', { cx: 160, cy: 166, r: 124, fill: '#5B3A22', opacity: .2 }, knob); S('circle', { cx: 160, cy: 160, r: 120, fill: '#F6EFE2', stroke: OUT, 'stroke-width': 5 }, knob); S('circle', { cx: 160, cy: 160, r: 104, fill: 'none', stroke: '#E3D8C4', 'stroke-width': 6 }, knob);
+    S('circle', { cx: 160, cy: 160, r: 78, fill: '#6B4630', stroke: OUT, 'stroke-width': 5 }, knob); S('circle', { cx: 160, cy: 160, r: 60, fill: '#7C5238' }, knob); shine(knob, 'M112,140a52,52 0 0 1 40,-32', 7, .3);
+    S('rect', { x: 152, y: 46, width: 16, height: 70, rx: 8, fill: TRUTH, stroke: OUT, 'stroke-width': 3 }, knob); S('circle', { cx: 160, cy: 160, r: 9, fill: '#D2A56B', stroke: OUT, 'stroke-width': 3 }, knob);
     if (Sense.sim) { Sense.s.roll = 0; const raw = q => Math.atan2(q.y - 160, q.x - 160) * 180 / Math.PI;
-      dragger(svg, { move: (q, d, last) => { if (Math.hypot(q.x - 160, q.y - 160) < 16) return; let dl = raw(q) - raw(last); if (dl > 180) dl -= 360; if (dl < -180) dl += 360; Sense.s.roll = clamp(Sense.s.roll + dl, -180, 180); knob.setAttribute('transform', `rotate(${Sense.s.roll} 160 160)`); } }); }
+      dragger(api.root, { move: (q, d, last) => { if (Math.hypot(q.x - 160, q.y - 160) < 16) return; let dl = raw(q) - raw(last); if (dl > 180) dl -= 360; if (dl < -180) dl += 360; Sense.s.roll = clamp(Sense.s.roll + dl, -180, 180); knob.setAttribute('transform', `rotate(${Sense.s.roll} 160 160)`); } }); }
     const word = label(svg, 160, 168, '', '#FFFBF2', 20); word.removeAttribute('stroke');
     api.btn('Set the oven', false);
     const stop = ticker(() => { ok = Sense.upright(); a = Math.abs(Sense.roll()); word.textContent = ok ? '' : 'Hold it upright'; api.btn('Set the oven', ok); });
     return {
       ready: () => ok, answer: () => a, primary: () => ok ? a : undefined,
-      reveal() { stop(); svg.innerHTML = ''; const c = { x: 160, y: 190 }, R = 120, end = (deg, r) => [c.x + Math.sin(rad(deg)) * r, c.y - Math.cos(rad(deg)) * r];
+      reveal() { stop(); svg.innerHTML = ''; word.textContent = ''; api.bg('cloth'); const c = { x: 160, y: 190 }, R = 120, end = (deg, r) => [c.x + Math.sin(rad(deg)) * r, c.y - Math.cos(rad(deg)) * r];
         S('path', { d: `M${end(-90, R)} A${R},${R} 0 0 1 ${end(90, R)}`, class: 'ink-s', 'stroke-width': 3, 'stroke-dasharray': '2 8' }, svg);
         S('line', { x1: c.x, y1: c.y, x2: c.x, y2: c.y - R, class: 'ink-s', 'stroke-width': 4 }, svg);
         const dA = Math.min(p.deg, 180), [tx, ty] = end(dA, R), [yx, yy] = end(a, R);
@@ -464,22 +484,24 @@ CH.whisk = {
   prompt: () => 'Whisk the eggs in time with the beat.',
   mount(api, p) {
     const svg = api.svg, timers = []; let phase = 'ready', stop = () => {}, rate = 0;
-    S('path', { d: 'M52,150 a108,108 0 0 0 216,0z', fill: '#EFE6D6', class: 'ink-s', 'stroke-width': 5 }, svg).style.fill = '#EFE6D6';
-    const yolk = S('circle', { cx: 160, cy: 188, r: 30, fill: '#FFC21A' }, svg);
-    const word = label(svg, 160, 100, 'Ready?', INK, 40), sub = label(svg, 160, 296, '', INK, 20);
+    api.bg('cloth'); shadow(svg, 160, 276, 96, 12); P(svg, 'M48,150a112,122 0 0 0 224,0z', '#F8F1E4'); S('path', { d: 'M60,198a112,122 0 0 0 200,0', fill: 'none', stroke: '#8EBFD0', 'stroke-width': 11 }, svg); S('path', { d: 'M70,214a112,122 0 0 0 180,0', fill: 'none', stroke: '#8EBFD0', 'stroke-width': 4 }, svg); shine(svg, 'M70,176q8,50 44,74', 7, .6);
+    S('ellipse', { cx: 160, cy: 150, rx: 112, ry: 32, fill: '#FFFAF0', stroke: OUT, 'stroke-width': 5 }, svg); S('ellipse', { cx: 160, cy: 154, rx: 96, ry: 23, fill: '#FBEFC4' }, svg); S('ellipse', { cx: 150, cy: 150, rx: 60, ry: 12, fill: '#FFF8E0' }, svg);
+    const yolk = S('circle', { cx: 160, cy: 154, r: 18, fill: '#FFBE1F', stroke: '#E89A0C', 'stroke-width': 3 }, svg); const tool = S('g', {}, svg);
+    S('path', { d: 'M0,0C-26,-34 -8,-66 0,-70C8,-66 26,-34 0,0M0,0C-12,-30 -4,-60 0,-70M0,0C12,-30 4,-60 0,-70', fill: 'none', stroke: '#9AA3AD', 'stroke-width': 4, 'stroke-linecap': 'round' }, tool); P(tool, 'M-7,-70h14l4,-64a11,11 0 0 0 -22,0z', '#D2A56B'); shine(tool, 'M-3,-126v44', 3, .5); tool.setAttribute('transform', 'translate(196,150) rotate(18)');
+    const word = label(svg, 160, 52, 'Ready?', INK, 38), sub = label(svg, 160, 304, '', INK, 22);
     api.btn('Play the beat', true);
-    const pulse = () => { yolk.setAttribute('r', 46); timers.push(setTimeout(() => yolk.setAttribute('r', 30), 110)); Snd.tone(880, 0.07, { type: 'triangle', vol: 0.16 }); buzz(12); };
+    const pulse = () => { yolk.setAttribute('r', 26); timers.push(setTimeout(() => yolk.setAttribute('r', 18), 110)); Snd.tone(880, 0.07, { type: 'triangle', vol: 0.16 }); buzz(12); };
     return {
       ready: () => phase === 'ready',
       primary() {
         if (phase !== 'ready') return undefined; phase = 'beat'; api.btn('Listen', false); word.textContent = 'Listen';
         const gap = 60000 / p.bpm; for (let i = 0; i < 4; i++) timers.push(setTimeout(pulse, 300 + i * gap));
         timers.push(setTimeout(() => {
-          phase = 'whisk'; word.textContent = 'Whisk!'; if (Sense.sim) { Sense.hp = { x: 0, y: 0, z: 0 }; dragger(svg, { down: q => { Sense.hp.x = (q.x - 160) / 8; Sense.hp.y = -(q.y - 188) / 8; }, move: q => { Sense.hp.x = (q.x - 160) / 8; Sense.hp.y = -(q.y - 188) / 8; } }); } Snd.beep(true); const DUR = 6, v = { x: 0, y: 0, z: 0 }, st = { x: 0, y: 0, z: 0 }, hits = { x: [], y: [], z: [] };
+          phase = 'whisk'; word.textContent = 'Whisk!'; if (Sense.sim) { Sense.hp = { x: 0, y: 0, z: 0 }; dragger(api.root, { down: q => { Sense.hp.x = (q.x - 160) / 8; Sense.hp.y = -(q.y - 152) / 8; }, move: q => { Sense.hp.x = (q.x - 160) / 8; Sense.hp.y = -(q.y - 152) / 8; } }); } Snd.beep(true); const DUR = 6, v = { x: 0, y: 0, z: 0 }, st = { x: 0, y: 0, z: 0 }, hits = { x: [], y: [], z: [] };
           stop = ticker((dt, t) => {
             for (const k of ['x', 'y', 'z']) { const h = Sense.hp[k]; v[k] += h * h * dt;
               if (h > 1.2 && st[k] !== 1) { st[k] = 1; hits[k].push(t); } else if (h < -1.2) st[k] = -1; }
-            sub.textContent = `${Math.max(0, Math.ceil(DUR - t))}`; yolk.setAttribute('cx', 160 + clamp(Sense.hp.x, -8, 8) * 5); yolk.setAttribute('cy', 188 - clamp(Sense.hp.y, -8, 8) * 3);
+            sub.textContent = `${Math.max(0, Math.ceil(DUR - t))}`; const wx = clamp(Sense.hp.x, -8, 8), wy = clamp(Sense.hp.y, -8, 8); yolk.setAttribute('cx', 160 + wx * 3); yolk.setAttribute('cy', 154 - wy * 1.2); tool.setAttribute('transform', `translate(${160 + wx * 9},${152 - wy * 2.4}) rotate(${18 + wx * 2})`);
             if (t >= DUR) { stop(); const k = ['x', 'y', 'z'].sort((a, b) => v[b] - v[a])[0], h = hits[k].filter(q => q > 0.5);
               rate = h.length >= 3 ? (h.length - 1) / (h[h.length - 1] - h[0]) * 60 : 0; api.lockNow(rate); }
           });
@@ -487,7 +509,7 @@ CH.whisk = {
         return undefined;
       },
       answer: () => rate,
-      reveal() { word.textContent = `${Math.round(rate)} a minute`; word.setAttribute('fill', YOU); sub.textContent = `The beat was ${p.bpm}`; sub.setAttribute('fill', TRUTH); yolk.setAttribute('cx', 160); yolk.setAttribute('cy', 188); },
+      reveal() { word.textContent = `${Math.round(rate)} a minute`; word.setAttribute('fill', YOU); sub.textContent = `The beat was ${p.bpm}`; sub.setAttribute('fill', TRUTH); yolk.setAttribute('cx', 160); yolk.setAttribute('cy', 154); },
       destroy() { timers.forEach(clearTimeout); stop(); }
     };
   },
@@ -501,14 +523,16 @@ CH.flour = {
   prompt: p => `Shake out exactly ${p.g} g of flour.`,
   mount(api, p) {
     const svg = api.svg; let amt = 0, spawn = 0; const bits = [];
-    S('rect', { x: 0, y: 0, width: 320, height: 320, fill: '#6B4A36' }, svg);
+    api.bg('wood'); P(svg, 'M104,-14h112l12,74q-68,18 -136,0z', '#EFE2C8'); S('path', { d: 'M104,58q56,14 112,0', fill: 'none', stroke: '#D8C6A4', 'stroke-width': 4 }, svg); P(svg, 'M150,8q10,-10 20,0q-4,22 -10,30q-6,-8 -10,-30z', '#E2B04A', { 'stroke-width': 2.5 }); shine(svg, 'M114,0l-6,44', 5, .5);
     const layer = S('g', {}, svg);
-    const pile = S('ellipse', { cx: 160, cy: 262, rx: 0, ry: 0, fill: '#FFFDF7' }, svg);
-    S('rect', { x: 60, y: 262, width: 200, height: 40, rx: 10, fill: '#EFE6D6', class: 'ink-s', 'stroke-width': 4 }, svg).style.fill = '#EFE6D6';
-    const read = S('text', { x: 160, y: 291, 'font-size': 26, 'text-anchor': 'middle', fill: INK }, svg); read.textContent = '? g';
-    const word = label(svg, 160, 40, '', '#FFFBF2', 22); word.removeAttribute('stroke');
+    shadow(svg, 160, 306, 120, 9); P(svg, 'M66,262h188a12,12 0 0 1 12,12v20a12,12 0 0 1 -12,12h-188a12,12 0 0 1 -12,-12v-20a12,12 0 0 1 12,-12z', '#E8695A'); shine(svg, 'M70,270h40', 4, .4);
+    P(svg, 'M150,244h20v20h-20z', '#C9CED6', { 'stroke-width': 3 }); P(svg, 'M84,214h152q-8,34 -76,34q-68,0 -76,-34z', '#BFDCD4'); shine(svg, 'M98,222q10,16 30,20', 5, .6);
+    const pile = S('ellipse', { cx: 160, cy: 216, rx: 0, ry: 0, fill: '#FFFDF7', stroke: '#E6DCC8', 'stroke-width': 2 }, svg); S('ellipse', { cx: 160, cy: 214, rx: 76, ry: 9, fill: 'none', stroke: OUT, 'stroke-width': 4 }, svg);
+    P(svg, 'M112,270h96v28h-96z', '#FFF6E4', { 'stroke-width': 3 });
+    const read = S('text', { x: 160, y: 292, 'font-size': 24, 'text-anchor': 'middle', fill: INK }, svg); read.textContent = '? g';
+    const word = label(svg, 160, 110, '', INK, 24);
     api.btn('Weigh it', false); let travel = 0;
-    if (Sense.sim) { Sense.s.tilt = 60; Sense.shake = 0; dragger(svg, { move: (q, d) => { travel += Math.hypot(d.x, d.y); } }); }
+    if (Sense.sim) { Sense.s.tilt = 60; Sense.shake = 0; dragger(api.root, { move: (q, d) => { travel += Math.hypot(d.x, d.y); } }); }
     const stop = ticker(dt => {
       if (Sense.sim) { Sense.shake = Sense.shake * 0.8 + 0.2 * (travel / dt / 55); travel = 0; }
       const tf = clamp((Sense.tilt() - 12) / 70, 0, 1), sf = clamp((Sense.shake - 1.5) / 10, 0, 1), rate = 170 * tf * sf;
@@ -516,12 +540,12 @@ CH.flour = {
       spawn += rate * dt / 6; while (spawn > 1 && bits.length < 90) { spawn--; bits.push({ el: S('circle', { cx: 160 + (Math.random() - 0.5) * 90, cy: 20, r: 2 + Math.random() * 3, fill: '#FFFDF7' }, layer), y: 20, v: 120 + Math.random() * 120 }); }
       for (let i = bits.length - 1; i >= 0; i--) { const b = bits[i]; b.y += b.v * dt; b.v += 500 * dt; b.el.setAttribute('cy', b.y); if (b.y > 256) { b.el.remove(); bits.splice(i, 1); } }
       if (rate > 20 && Math.random() < 0.3) Snd.tone(2500 + Math.random() * 1500, 0.03, { type: 'square', vol: 0.012 });
-      const s = Math.sqrt(Math.min(amt, 600)); pile.setAttribute('rx', s * 3.4); pile.setAttribute('ry', s * 1.5);
+      const s = Math.sqrt(Math.min(amt, 600)); pile.setAttribute('rx', Math.min(70, s * 3)); pile.setAttribute('ry', s * 1.3); pile.setAttribute('cy', 216 - s * 0.5);
       if (amt > 0) api.btn('Weigh it', true);
     });
     return {
       ready: () => amt > 0, answer: () => amt,
-      reveal() { stop(); read.textContent = `${Math.round(amt)} g`; read.setAttribute('fill', YOU); label(svg, 160, 44, `The recipe said ${p.g} g`, '#FFFBF2', 24).removeAttribute('stroke'); },
+      reveal() { stop(); read.textContent = `${Math.round(amt)} g`; read.setAttribute('fill', YOU); label(svg, 160, 120, `The recipe said ${p.g} g`, TRUTH, 26); },
       destroy: () => stop()
     };
   },
@@ -535,16 +559,18 @@ CH.level = {
   prompt: () => Sense.sim ? 'Level the cake with one perfectly straight cut.' : 'Hold your phone perfectly flat while the knife levels the cake.',
   mount(api) {
     const svg = api.svg, DUR = 4, pts = []; let phase = 'ready', stop = () => {}, rms = 0;
-    S('rect', { x: 40, y: 150, width: 240, height: 110, rx: 8, fill: '#E9B872', class: 'ink-s', 'stroke-width': 5 }, svg).style.fill = '#E9B872';
-    S('rect', { x: 24, y: 260, width: 272, height: 14, rx: 7, fill: INK }, svg);
-    const knife = S('g', { visibility: 'hidden' }, svg); S('rect', { x: -5, y: 96, width: 10, height: 120, rx: 3, fill: '#C9CED6', stroke: INK, 'stroke-width': 2 }, knife); S('rect', { x: -7, y: 56, width: 14, height: 44, rx: 5, fill: INK }, knife);
+    api.bg('cloth'); shadow(svg, 160, 312, 80, 8); P(svg, 'M140,274h40l12,36h-64z', '#F8F1E4'); P(svg, 'M18,262h284a8,8 0 0 1 0,16h-284a8,8 0 0 1 0,-16z', '#F8F1E4'); shine(svg, 'M34,268h70', 3, .7);
+    P(svg, 'M40,184q20,-34 120,-36q100,2 120,36z', '#F4D49A'); P(svg, 'M40,182h240v80h-240z', '#ECBE7A'); S('path', { d: 'M42,220h236', stroke: '#FFF6E4', 'stroke-width': 11 }, svg); S('path', { d: 'M42,221h236', stroke: '#D8483B', 'stroke-width': 3, 'stroke-dasharray': '26 5' }, svg);
+    [[70,200],[120,244],[176,198],[230,246],[258,204],[96,238],[204,236]].forEach(([x, y]) => S('circle', { cx: x, cy: y, r: 2.2, fill: '#C9954F' }, svg)); shine(svg, 'M60,172q40,-16 80,-18', 5, .5);
+
+    const knife = S('g', { visibility: 'hidden' }, svg); P(knife, 'M-6,98h12v112q-6,14 -12,0z', '#D5DAE0', { 'stroke-width': 3 }); shine(knife, 'M-1,106v90', 2.5, .8); P(knife, 'M-8,50h16v50h-16z', '#B5743C', { 'stroke-width': 3 }); S('circle', { cx: 0, cy: 64, r: 2, fill: OUT }, knife); S('circle', { cx: 0, cy: 86, r: 2, fill: OUT }, knife);
     const word = label(svg, 160, 44, Sense.sim ? 'Ready?' : 'Phone flat, screen up', INK, 24);
     api.btn('Start the cut', true);
     return {
       ready: () => phase === 'ready',
       primary() { if (phase !== 'ready') return undefined; phase = 'cut'; knife.setAttribute('visibility', 'visible'); Snd.beep(true);
         if (Sense.sim) { api.btn('Drag the knife', false); word.textContent = 'Drag it straight across'; knife.setAttribute('transform', 'translate(40,0)'); let y0 = null;
-          dragger(svg, { down: q => { y0 = q.y; pts.length = 0; }, up: () => { if (phase === 'cut') { pts.length = 0; knife.setAttribute('transform', 'translate(40,0)'); } },
+          dragger(api.root, { down: q => { y0 = q.y; pts.length = 0; }, up: () => { if (phase === 'cut') { pts.length = 0; knife.setAttribute('transform', 'translate(40,0)'); } },
             move: q => { if (phase !== 'cut' || y0 === null) return; const x = clamp(q.x, 40, 280), dy = (q.y - y0) / 3; if (pts.length && (x - 40) / 240 * DUR < pts[pts.length - 1].t) return;
               pts.push({ t: (x - 40) / 240 * DUR, f: Math.abs(dy), s: dy }); knife.setAttribute('transform', `translate(${x},0)`);
               if (x >= 280 && pts.length > 5) { phase = 'done'; rms = Math.sqrt(pts.reduce((a, k) => a + k.f * k.f, 0) / pts.length); api.lockNow(rms); } } });
@@ -556,8 +582,8 @@ CH.level = {
         return undefined; },
       answer: () => rms,
       reveal() { knife.setAttribute('visibility', 'hidden'); word.textContent = `Average tilt ${fmt(rms)}°`; word.setAttribute('fill', YOU);
-        S('line', { x1: 40, y1: 180, x2: 280, y2: 180, class: 'truth-s pop', 'stroke-width': 2, 'stroke-dasharray': '6 6' }, svg);
-        S('path', { d: 'M' + pts.map(q => `${40 + 240 * Math.min(1, q.t / DUR)},${clamp(180 + q.s * 3 + Math.sign(q.s || 1) * Math.max(0, q.f - Math.abs(q.s)) * 3, 154, 256)}`).join('L'), class: 'you-s pop', 'stroke-width': 3 }, svg); },
+        S('line', { x1: 40, y1: 182, x2: 280, y2: 182, class: 'truth-s pop', 'stroke-width': 2, 'stroke-dasharray': '6 6' }, svg);
+        S('path', { d: 'M' + pts.map(q => `${40 + 240 * Math.min(1, q.t / DUR)},${clamp(182 + q.s * 3 + Math.sign(q.s || 1) * Math.max(0, q.f - Math.abs(q.s)) * 3, 154, 256)}`).join('L'), class: 'you-s pop', 'stroke-width': 3 }, svg); },
       destroy: () => stop()
     };
   },
@@ -577,13 +603,16 @@ CH.cut = {
   gen(g) { return { n: ri(g, 2, 5), R: rr(g, 78, 92), sx: rr(g, 1.15, 1.4), w: [0, 1, 2].map(() => ({ a: rr(g, 0.06, 0.2), ph: rr(g, 0, 6.28) })) }; },
   prompt: p => `Cut the dough into ${p.n} equal pieces.`,
   mount(api, p) {
-    const svg = api.svg, pts = blobShape(p), col = blobColumns(pts), cuts = [], lines = []; let grab = 0;
-    S('polygon', { points: pts.map(q => q.join(',')).join(' '), class: 'ink-s', 'stroke-width': 5 }, svg).style.fill = DOUGH;
-    for (let i = 0; i < p.n - 1; i++) { cuts.push(8 + i * 9); lines.push(S('line', { y1: 26, y2: 300, class: 'you-s', 'stroke-width': 4 }, svg)); }
-    const draw = () => { lines.forEach((l, i) => { l.setAttribute('x1', cuts[i]); l.setAttribute('x2', cuts[i]); }); };
+    const svg = api.svg, pts = blobShape(p), col = blobColumns(pts), cuts = [], lines = [], hs = []; let grab = 0;
+    api.bg('wood'); const poly = pts.map(q => q.join(',')).join(' '); S('ellipse', { cx: 160, cy: 168, rx: 140, ry: 112, fill: '#FFF9EC', opacity: .55 }, svg);
+    S('polygon', { points: poly, fill: '#5B3A22', opacity: .18, transform: 'translate(4,7)' }, svg); S('polygon', { points: poly, fill: DOUGH, stroke: OUT, 'stroke-width': 5, 'stroke-linejoin': 'round' }, svg);
+    S('polygon', { points: poly, fill: '#FBEBC8', transform: 'translate(160,162) scale(.78) translate(-168,-172)' }, svg); shine(svg, 'M118,126q20,-16 46,-18', 6, .7);
+    for (let k = 0; k < 14; k++) S('circle', { cx: 30 + (k * 73) % 262, cy: 34 + (k * 131) % 256, r: 1.5 + k % 3, fill: '#FFF9EC', opacity: .8 }, svg);
+    for (let i = 0; i < p.n - 1; i++) { cuts.push(8 + i * 9); lines.push(S('line', { y1: 40, y2: 304, class: 'you-s', 'stroke-width': 4 }, svg)); hs.push(S('rect', { y: 12, width: 20, height: 32, rx: 6, fill: '#B5743C', stroke: OUT, 'stroke-width': 3 }, svg)); }
+    const draw = () => { lines.forEach((l, i) => { l.setAttribute('x1', cuts[i]); l.setAttribute('x2', cuts[i]); hs[i].setAttribute('x', cuts[i] - 10); }); };
     const ok = () => cuts.every(c => c > col.x0 + 1 && c < col.x1 - 1);
     draw();
-    dragger(svg, { down: q => { grab = 0; cuts.forEach((c, i) => { if (Math.abs(c - q.x) < Math.abs(cuts[grab] - q.x)) grab = i; }); },
+    dragger(api.root, { down: q => { grab = 0; cuts.forEach((c, i) => { if (Math.abs(c - q.x) < Math.abs(cuts[grab] - q.x)) grab = i; }); },
       move: (q, d) => { cuts[grab] = clamp(cuts[grab] + d.x, 4, 316); draw(); api.changed(); } });
     return {
       ready: ok, answer: () => cuts.slice().sort((a, b) => a - b),
@@ -603,7 +632,8 @@ CH.timer = {
   prompt: p => `Stop the oven timer at exactly ${p.T}.00 seconds.`,
   mount(api, p) {
     const svg = api.svg, cx = 160, cy = 142, R = 104; let phase = 'ready', t0 = 0, raf = 0, to = 0, stopped = null;
-    S('circle', { cx, cy, r: R, class: 'ink-s', 'stroke-width': 5 }, svg).style.fill = '#EFE6D6';
+    api.bg('cloth'); shadow(svg, 160, 276, 120, 10); P(svg, 'M70,258h30v16h-30zM220,258h30v16h-30z', '#6B4630'); P(svg, 'M132,8h56v20h-56z', '#D2A56B'); P(svg, 'M52,24h216a30,30 0 0 1 30,30v180a30,30 0 0 1 -30,30h-216a30,30 0 0 1 -30,-30v-180a30,30 0 0 1 30,-30z', '#A5D3C4'); shine(svg, 'M38,60q0,-22 22,-24', 6, .6); shine(svg, 'M36,76v60', 5, .35);
+    S('circle', { cx, cy, r: R, fill: '#FFF8EA', stroke: OUT, 'stroke-width': 5 }, svg);
     const pos = (sec, r) => { const a = rad(sec * 24 - 90); return [cx + Math.cos(a) * r, cy + Math.sin(a) * r]; };
     for (let i = 0; i < 15; i++) { const [x1, y1] = pos(i, R - (i % 3 ? 9 : 17)), [x2, y2] = pos(i, R - 2); S('line', { x1, y1, x2, y2, stroke: INK, 'stroke-width': i % 3 ? 1.5 : 3 }, svg);
       if (i % 3 === 0) { const [x, y] = pos(i, R - 31); const tx = S('text', { x, y: y + 6, 'font-size': 18, 'text-anchor': 'middle', fill: INK }, svg); tx.textContent = i; } }
@@ -640,9 +670,11 @@ CH.chips = {
   prompt: () => 'How many chocolate chips are on the cookie?',
   mount(api, p) {
     const svg = api.svg; let phase = 'ready', val = null, timer = null, slider;
-    S('circle', { cx: 160, cy: 160, r: 128, class: 'ink-s', 'stroke-width': 5 }, svg).style.fill = '#D9A45B';
+    api.bg('tray'); const edge = Array.from({ length: 48 }, (_, k) => { const a = k / 48 * 6.283, r = 128 + Math.sin(k * 2.7) * 4 + Math.sin(k * 1.3) * 3; return [160 + Math.cos(a) * r, 160 + Math.sin(a) * r].join(','); }).join(' ');
+    S('polygon', { points: edge, fill: '#5B3A22', opacity: .2, transform: 'translate(4,7)' }, svg); S('polygon', { points: edge, fill: '#D29A52', stroke: OUT, 'stroke-width': 5, 'stroke-linejoin': 'round' }, svg); S('circle', { cx: 156, cy: 155, r: 112, fill: '#E3B46C' }, svg);
+    S('path', { d: 'M70,120q10,6 8,18M232,96q-10,8 -6,20M96,236q12,-2 18,8M214,232q8,-10 20,-8M150,70q8,6 18,2', fill: 'none', stroke: '#C4893F', 'stroke-width': 3, 'stroke-linecap': 'round' }, svg); shine(svg, 'M84,92q24,-30 60,-36', 6, .35);
     const msg = label(svg, 160, 168, 'Ready?', INK, 44);
-    const dots = S('g', { visibility: 'hidden' }, svg); p.pts.forEach(q => S('circle', { cx: q.x, cy: q.y, r: q.r, fill: CHOC }, dots));
+    const dots = S('g', { visibility: 'hidden' }, svg); p.pts.forEach(q => { S('circle', { cx: q.x, cy: q.y, r: q.r, fill: CHOC, stroke: '#2E170B', 'stroke-width': 1.5 }, dots); S('circle', { cx: q.x - q.r * .3, cy: q.y - q.r * .35, r: q.r * .28, fill: '#8A5A3C' }, dots); });
     const big = S('text', { x: 160, y: 200, 'font-size': 110, 'text-anchor': 'middle', fill: YOU, visibility: 'hidden', 'paint-order': 'stroke', stroke: '#FFFBF2', 'stroke-width': 8 }, svg);
     api.btn('Show the cookie', true);
     const set = v => { val = clamp(Math.round(v), 1, 60); big.textContent = val; slider.value = val; api.changed(); };
@@ -673,15 +705,17 @@ CH.proof = {
   mount(api, p) {
     const svg = api.svg, bx = 160, by = 262, w0 = 58, h0 = 46, MAX = 4.6; let phase = 'ready', r = 1, stop = () => {};
     const dome = s => `M${bx - w0 * s},${by} A${w0 * s},${h0 * s * 1.25} 0 0 1 ${bx + w0 * s},${by}Z`;
-    const dough = S('path', { d: dome(1), class: 'ink-s', 'stroke-width': 5 }, svg); dough.style.fill = DOUGH;
-    S('path', { d: dome(1), fill: 'none', stroke: INK, 'stroke-width': 2, 'stroke-dasharray': '5 6' }, svg);
-    S('rect', { x: 14, y: by, width: 292, height: 14, rx: 7, fill: INK }, svg);
+    api.bg('cloth'); shadow(svg, bx, by + 46, 140, 10);
+    const dough = S('path', { d: dome(1), fill: DOUGH, stroke: OUT, 'stroke-width': 5, 'stroke-linejoin': 'round' }, svg); const gloss = S('path', { fill: 'none', stroke: '#FFF6DC', 'stroke-width': 6, 'stroke-linecap': 'round', opacity: .8 }, svg);
+    const setGloss = s => gloss.setAttribute('d', `M${bx - w0 * s * .62},${by - h0 * s * .7}Q${bx - w0 * s * .3},${by - h0 * s * 1.12} ${bx + w0 * s * .1},${by - h0 * s * 1.12}`); setGloss(1);
+    S('path', { d: dome(1), fill: 'none', stroke: OUT, 'stroke-width': 2.5, 'stroke-dasharray': '5 6' }, svg);
+    P(svg, `M${bx - 138},${by}h276l-20,42h-236z`, '#D2A56B'); for (let k = 0; k < 4; k++) S('path', { d: `M${bx - 132 + k * 5},${by + 9 + k * 9}h${264 - k * 10}`, stroke: '#B88A52', 'stroke-width': 3, 'stroke-linecap': 'round' }, svg); P(svg, `M${bx - 146},${by - 5}h292a6,6 0 0 1 0,12h-292a6,6 0 0 1 0,-12z`, '#E3BC85', { 'stroke-width': 3 });
     api.btn('Start proofing', true);
     const inst = {
       fast: false, ready: () => phase === 'run',
       primary() {
         if (phase === 'ready') { phase = 'run'; inst.fast = true; api.btn('Stop', true); Snd.beep(true);
-          stop = ticker((dt, t) => { r = 1 + p.rate * t; dough.setAttribute('d', dome(Math.sqrt(r))); if (r >= MAX) { stop(); r = MAX; api.lockNow(r); } }); return undefined; }
+          stop = ticker((dt, t) => { r = 1 + p.rate * t; dough.setAttribute('d', dome(Math.sqrt(r))); setGloss(Math.sqrt(r)); if (r >= MAX) { stop(); r = MAX; api.lockNow(r); } }); return undefined; }
         if (phase === 'run') { if (r < 1.03) return undefined; stop(); return r; }
         return undefined; },
       answer: () => r,
@@ -794,7 +828,9 @@ function loadRound() {
   const hint = $('#hint'); hint.classList.remove('res'); hint.textContent = Sense.sim && ch.simHint ? ch.simHint : ch.hint;
   const svg = S('svg', { viewBox: '0 0 320 320', role: 'img', 'aria-label': ch.prompt(r.p) }, wrap);
   const btn = $('#bMain'); btn.textContent = 'Lock it in'; btn.disabled = true;
-  const api = { svg, controls: $('#controls'), changed() { Snd.tick(); btn.disabled = !Game.inst.ready(); }, btn(label, on) { btn.textContent = label; btn.disabled = !on; }, hint(t) { hint.textContent = t; }, lockNow(a) { lock(a); } };
+  S('defs', {}, svg).innerHTML = '<filter id="wob" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="4" xChannelSelector="R" yChannelSelector="G"/></filter>';
+  const bgG = S('g', {}, svg), art = S('g', { filter: 'url(#wob)' }, svg); TOP = S('g', {}, svg);
+  const api = { svg: art, root: svg, bg: k => backdrop(bgG, k), controls: $('#controls'), changed() { Snd.tick(); btn.disabled = !Game.inst.ready(); }, btn(label, on) { btn.textContent = label; btn.disabled = !on; }, hint(t) { hint.textContent = t; }, lockNow(a) { lock(a); } };
   Game.inst = ch.mount(api, r.p);
 }
 
