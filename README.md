@@ -1,6 +1,6 @@
 # Smidge
 
-The daily baking game you play by feel. Four bakes a day, drawn from a pool of nine. Phones only: a computer gets a "play this on your phone" screen.
+The daily baking game you play by feel. Four bakes a day, drawn from a pool of nine. Best on a phone. On a computer, or if motion access is refused, the motion games switch to mouse and touch versions, and the home screen says the phone version is better.
 
 Motion games (use the phone's tilt and shake sensors): Olive oil (tip past sideways to pour), Oven dial (turn the phone like a knob), Whisk (shake in time with a beat), Flour (tip and shake like a bag), Level the cake (hold the phone flat).
 Touch games: Cut the dough, Oven timer, Chocolate chips, Proof the dough.
@@ -14,7 +14,6 @@ Play: https://sauv2616-hub.github.io/smidge/
 - Progress, streaks and stats are saved in the player's browser (local storage). One go per day per device.
 - A round's score is `100 * exp(-error / tau)`; each game has its own `tau` in the `CH` table, which is the one number to change if a game turns out too harsh or too easy. Flow rates for oil and flour are in `CH.pour` and `CH.flour`.
 - Motion needs HTTPS and, on iPhone, the player tapping Allow when asked. The `Sense` object reads the sensors.
-- Add `?debug=1` to the address to open the game on a computer for testing (motion games will not respond without sensors).
 
 ## The curve
 
