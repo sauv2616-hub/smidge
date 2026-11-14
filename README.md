@@ -1,9 +1,9 @@
 # Smidge
 
-The daily baking game you play by feel. Four bakes a day, drawn from a pool of nine. Best on a phone. On a computer, or if motion access is refused, the motion games switch to mouse and touch versions, and the home screen says the phone version is better.
+The daily baking game you play by feel. Four bakes a day, drawn from a pool of eight. Best on a phone. On a computer, or if motion access is refused, the motion games switch to mouse and touch versions, and the home screen says the phone version is better.
 
 Motion games (use the phone's tilt and shake sensors): Olive oil (tip past sideways to pour), Oven dial (turn the phone like a knob), Whisk (shake in time with a beat), Flour (tip and shake like a bag), Level the cake (hold the phone flat).
-Touch games: Cut the dough, Oven timer, Chocolate chips, Proof the dough.
+Touch games: Cut the dough, Oven timer. Proof the dough is lift-to-raise on a phone and stop-the-rise with touch.
 
 Play: https://sauv2616-hub.github.io/smidge/
 

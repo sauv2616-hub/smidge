@@ -254,6 +254,41 @@ main{max-width:520px;padding-top:6px}
 .controls:empty{display:none}
 #game .btn{margin-top:0;box-shadow:0 5px 0 rgba(0,0,0,.35),0 10px 20px rgba(107,63,34,.3)}
 .steamy{animation:glow 2s ease-in-out infinite}
+
+/* ---- interface pass: one clear focus per screen, soft glass panels, springy motion ---- */
+.screen.on{animation:screenIn .4s cubic-bezier(.2,.9,.3,1)}
+#game.on{animation:none}
+@keyframes screenIn{0%{opacity:0;transform:translateY(14px)}}
+.panel{background:rgba(255,251,242,.88);-webkit-backdrop-filter:blur(14px) saturate(1.3);backdrop-filter:blur(14px) saturate(1.3);border:1.5px solid rgba(123,74,45,.25);border-radius:26px;padding:12px 18px 14px;box-shadow:0 10px 30px rgba(107,63,34,.22);text-align:center;animation:panelIn .55s cubic-bezier(.2,1.25,.3,1)}
+@keyframes panelIn{0%{transform:translateY(-34px);opacity:0}}
+.rounds{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:0 0 10px}
+.rounds div{width:auto;height:7px;border-radius:99px;border:0!important;background:rgba(123,74,45,.18);box-shadow:none;font-size:0;transform:none!important;animation:none!important;transition:background .4s}
+.rounds div.now{background:#7B4A2D}
+.rounds div.s-top,.rounds div.s-good{background:var(--good)}.rounds div.s-ok{background:var(--ok)}.rounds div.s-meh{background:var(--meh)}.rounds div.s-bad{background:var(--bad)}
+.kind{font:800 16px/1.2 var(--body);color:#8A5A3C;letter-spacing:0;margin:0;opacity:1}
+.prompt{font-size:clamp(38px,11.5vw,54px);line-height:1.02;min-height:0;margin:2px 0 0;color:var(--ink)}
+.hud-bot{min-height:214px;display:flex;flex-direction:column;justify-content:flex-end;text-align:center}
+.hint{align-self:center;margin:0 0 10px;background:rgba(255,251,242,.9);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1.5px solid rgba(123,74,45,.25);box-shadow:0 6px 18px rgba(107,63,34,.18);border-radius:18px;padding:8px 14px;font-size:15px;transition:opacity .7s,transform .7s}
+.hint.gone{opacity:0;transform:translateY(8px)}
+.controls{margin:0 0 10px;background:rgba(255,251,242,.9);border-radius:20px;padding:2px 10px;box-shadow:0 6px 18px rgba(107,63,34,.18)}
+#bMain{transition:transform .4s cubic-bezier(.3,1.7,.5,1),opacity .25s,box-shadow .12s}
+#bMain[disabled]{opacity:0;transform:translateY(22px) scale(.9);pointer-events:none}
+.rsheet{background:rgba(255,251,242,.94);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:1.5px solid rgba(123,74,45,.25);border-radius:26px;padding:14px 16px 12px;margin-bottom:10px;box-shadow:0 12px 34px rgba(107,63,34,.28);text-align:left;animation:sheetUp .55s cubic-bezier(.2,1.3,.3,1)}
+@keyframes sheetUp{0%{transform:translateY(70px);opacity:0}}
+.rs-head{display:flex;align-items:center;gap:14px}
+.rs-score{font:400 58px/1 var(--display);min-width:104px;text-align:center;border-radius:20px;padding:8px 8px 6px;font-variant-numeric:tabular-nums}
+.rs-verdict{font:400 25px/1.1 var(--display)}
+.rs-off{font-weight:700;font-size:15px;opacity:.75;margin-top:3px}
+.rs-track{height:10px;border-radius:99px;background:rgba(123,74,45,.15);margin:12px 0 6px;overflow:hidden}
+.rs-track i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#C9894A,#7B4A2D);transition:width 1s cubic-bezier(.2,.8,.2,1)}
+.rs-pct{font-weight:800;font-size:15px}
+#home{gap:16px;justify-content:center}
+.shop{max-height:46dvh}
+.home-links{justify-content:center;gap:14px}
+#result.on>*{animation:rise .55s cubic-bezier(.2,1,.3,1) both}
+#result.on>*:nth-child(3){animation-delay:.05s}#result.on>*:nth-child(4){animation-delay:.12s}#result.on>*:nth-child(5){animation-delay:.2s}#result.on>*:nth-child(6){animation-delay:.3s}#result.on>*:nth-child(7){animation-delay:.4s}#result.on>*:nth-child(8){animation-delay:.5s}#result.on>*:nth-child(9){animation-delay:.6s}#result.on>*:nth-child(10){animation-delay:.7s}
+@keyframes rise{0%{opacity:0;transform:translateY(22px)}}
+.sheet>div{border-radius:28px 28px 0 0;animation:up .4s cubic-bezier(.2,1.2,.3,1)}
 .jolt{animation:jolt .28s linear}
 @keyframes jolt{0%,100%{transform:none}20%{transform:translate(-5px,2px)}45%{transform:translate(5px,-2px)}70%{transform:translate(-3px,1px)}}
 .sensebox{font:700 17px/1.7 var(--body);background:#FFFBF2;border:2.5px solid #7B4A2D;border-radius:14px;padding:10px 14px;margin-bottom:14px;white-space:pre-line}
@@ -304,9 +339,7 @@ main{max-width:520px;padding-top:6px}
 <g><path d="M326,300v-22" stroke-width="3"/><circle cx="326" cy="266" r="15" fill="#7FA65A"/><circle cx="320" cy="262" r="3" fill="#F28FA6" stroke="none"/><circle cx="332" cy="270" r="3" fill="#F28FA6" stroke="none"/><path d="M314,300h24l-3,-12h-18z" fill="#C9694D"/></g>
 <g class="cat"><path class="tail" d="M214,292q14,-2 12,-20" fill="none" stroke="#E39A4B" stroke-width="7"/><ellipse cx="204" cy="288" rx="13" ry="11" fill="#F0AE5E"/><circle cx="200" cy="272" r="9" fill="#F0AE5E"/><path d="M193,266l-1,-9l7,5zM204,263l5,-7l2,9z" fill="#F0AE5E" stroke-width="2.5"/><path d="M196,272h.1M203,272h.1" stroke-width="3.5"/><path d="M198,276q2,2 4,0" fill="none" stroke-width="2"/></g>
 </g></svg>
-      <p class="lede">Four bakes a day, all by feel. Pour the oil, whisk the eggs, turn the dial, with no measuring cup and no timer. Then see where you land against everyone else.</p>
       <div class="friend" id="friend" hidden></div>
-      <div class="desknote" id="deskNote" hidden>Smidge is much better on a phone. There you tip it to pour, shake it to sift and turn it like an oven dial. On a computer you get mouse versions instead.</div>
       <div class="today">
         <div class="when"><span class="num" id="hNum"></span><span class="date" id="hDate"></span></div>
         <ul class="five" id="hFive"></ul>
@@ -323,12 +356,15 @@ main{max-width:520px;padding-top:6px}
       <div class="sceneback" id="sceneback"></div>
       <div class="stagewrap" id="stagewrap"></div>
       <div class="hud hud-top">
-        <div class="rounds" id="rounds" aria-label="Round progress"></div>
-        <div class="card"><div class="kind" id="kind"></div><h2 class="prompt" id="prompt"></h2></div>
+        <div class="panel"><div class="rounds" id="rounds" aria-label="Round progress"></div><div class="kind" id="kind"></div><h2 class="prompt" id="prompt"></h2></div>
       </div>
-      <div class="hud hud-bot">
-        <div class="under" id="under"><p class="hint" id="hint" aria-live="polite"></p></div>
+      <div class="hud hud-bot" id="hudbot">
+        <p class="hint" id="hint" aria-live="polite"></p>
         <div class="controls" id="controls"></div>
+        <div class="rsheet" id="rsheet" hidden>
+          <div class="rs-head" id="rsHead"><b class="rs-score" id="rsScore">0</b><div><div class="rs-verdict" id="rsVerdict"></div><div class="rs-off" id="rsOff"></div></div></div>
+          <div class="rs-track"><i id="rsBar"></i></div><div class="rs-pct" id="rsPct"></div>
+        </div>
         <button class="btn" id="bMain">Lock it in</button>
       </div>
     </section>
@@ -363,7 +399,9 @@ main{max-width:520px;padding-top:6px}
     <li>There is no measuring cup, no scale and no clock. Go by feel.</li>
     <li>Each bake scores up to 100. The closer you get, the higher it goes.</li>
     <li>Everyone gets the same four, and you get one go. A new Smidge lands at midnight.</li>
-    <li>Your phone will ask to share motion. Tap Allow to play by tipping and shaking. Without it, or on a computer, you get touch versions, which are not half as fun.</li>
+    <li>Your phone will ask to share motion. Tap Allow to play by tipping and shaking.</li>
+    <li>Smidge is much better on a phone. On a computer, or without motion access, you get mouse and touch versions instead.</li>
+    <li>After every bake you see your score and how you did against other bakers. The home screen keeps your streak.</li>
   </ul>
   <button class="btn" data-close>Got it</button>
   <p style="text-align:center;margin-top:12px"><button class="link" id="bSense">Check my phone's motion sensors</button></p>
@@ -478,7 +516,7 @@ function dragger(svg, h) {
   const up = () => { if (last && h.up) h.up(); last = null; };
   svg.addEventListener('pointerup', up); svg.addEventListener('pointercancel', up);
 }
-function fitScene() { const g = $('#game'); if (!g.classList.contains('on')) return; const R = g.getBoundingClientRect(), top = document.querySelector('.card').getBoundingClientRect().bottom - R.top + 10, bot = R.bottom - $('#under').getBoundingClientRect().top + 6;
+function fitScene() { const g = $('#game'); if (!g.classList.contains('on')) return; const R = g.getBoundingClientRect(), top = document.querySelector('.panel').getBoundingClientRect().bottom - R.top + 10, bot = R.bottom - $('#hudbot').getBoundingClientRect().top + 6;
   const free = Math.max(160, R.height - top - bot), k = Math.min(R.width / 320, free / 332), vb = `${160 - R.width / k / 2} ${160 - (top + free / 2) / k} ${R.width / k} ${R.height / k}`;
   document.querySelectorAll('#sceneback svg, #stagewrap svg').forEach(e => e.setAttribute('viewBox', vb)); }
 addEventListener('resize', fitScene);
@@ -537,14 +575,26 @@ let TOP = null;
 const OIL = '#E2B100', DOUGH = '#F3D9A4', CRUST = '#B8742E', CHOC = '#4A2A18';
 
 CH.pour = {
-  simHint: 'Press and drag down to tip the bottle. The further you tip, the faster it flows. Let go to stop',
-  name: 'Olive oil', icon: '🫒', tau: 25, motion: true, hint: 'Your phone is the bottle. Tip it past sideways to pour, and further over to pour faster. You can stop and pour again. Stand it fully upright when you are done',
+  ask: 'Pour exactly', goal: p => `${p.ml} ml`,
+  simHint: 'Press and drag down to tip the bottle. The glass shows the first 10 ml, then it gets covered. Let go to finish',
+  name: 'Olive oil', icon: '🫒', tau: 25, motion: true, hint: 'Your phone is the bottle. Tip it past sideways to pour. The glass shows the first 10 ml, then it gets covered. Stand the phone upright to finish',
   gen(g) { return { ml: ri(g, 4, 16) * 5 }; },
   prompt: p => `Pour exactly ${p.ml} ml of olive oil.`,
   mount(api, p) {
     const svg = api.svg; let v = 0, started = false, glug = 0;
-    const bowl = S('g', Sense.sim ? {} : { display: 'none' }, svg); shadow(bowl, 214, 312, 100, 8); P(bowl, 'M118,272h196q-6,44 -98,44q-92,0 -98,-44z', '#F8F1E4'); S('ellipse', { cx: 216, cy: 272, rx: 98, ry: 12, fill: '#FFFAF0', stroke: OUT, 'stroke-width': 4.5 }, bowl); const pool = S('ellipse', { cx: 216, cy: 274, rx: 0, ry: 0, fill: OIL }, bowl); shine(bowl, 'M134,284q10,16 34,22', 5, .6); let shown = 0, clock = 0, flow = 0, hap = 0;
-    const bottle = S('g', {}, svg); shadow(bottle, 160, 282, 62, 8);
+    const JX = 170, JW = 116, JT = 176, JB = 300, cap = Math.max(40, p.ml * 1.5), ly = q => JB - 4 - Math.min(1, q / cap) * (JB - JT - 14); let shown = 0, clock = 0, flow = 0, hap = 0, covered = false;
+    shadow(svg, JX + JW / 2, JB + 6, 76, 8);
+    [[OUT, 15], ['#E4F0EE', 7]].forEach(([c, w]) => S('path', { d: `M${JX + JW},${JT + 26}h18a14,14 0 0 1 14,14v40a14,14 0 0 1 -14,14h-18`, fill: 'none', stroke: c, 'stroke-width': w, 'stroke-linecap': 'round' }, svg));
+    S('rect', { x: JX, y: JT, width: JW, height: JB - JT, fill: '#EAF4F2' }, svg);
+    const oil = S('rect', { x: JX + 2, width: JW - 4, y: JB, height: 0, fill: OIL }, svg), surf = S('ellipse', { cx: JX + JW / 2, rx: JW / 2 - 3, ry: 5, cy: JB, fill: '#F4D24A', visibility: 'hidden' }, svg);
+    P(svg, `M${JX},${JT}l-14,-8l14,22`, '#EAF4F2'); S('path', { d: `M${JX},${JT}V${JB - 8}a8,8 0 0 0 8,8H${JX + JW - 8}a8,8 0 0 0 8,-8V${JT}`, fill: 'none', stroke: OUT, 'stroke-width': 5, 'stroke-linecap': 'round' }, svg);
+    for (let i = 1; i < 6; i++) { const yy = JB - 4 - i / 6 * (JB - JT - 14); S('line', { x1: JX + 3, y1: yy, x2: JX + (i % 2 ? 16 : 26), y2: yy, stroke: TRUTH, 'stroke-width': 2.5, 'stroke-linecap': 'round' }, svg); }
+    shine(svg, `M${JX + JW - 14},${JT + 14}V${JB - 22}`, 6, .55);
+    const stream = S('path', { fill: 'none', stroke: OIL, 'stroke-width': 10, 'stroke-linecap': 'round', visibility: 'hidden' }, svg);
+    const cover = S('g', { visibility: 'hidden' }, svg); P(cover, `M${JX - 14},${JT - 12}h${JW + 28}l10,${JB - JT + 6}q-${(JW + 48) / 2},16 -${JW + 48},0z`, '#F7B6C2'); for (let i = 1; i < 5; i++) S('path', { d: `M${JX - 16 + i * (JW + 32) / 5},${JT - 10}l${(i - 2.5) * 4},${JB - JT + 10}`, stroke: '#FFE9EE', 'stroke-width': 7, 'stroke-linecap': 'round' }, cover);
+    S('text', { x: JX + JW / 2, y: JB - 40, 'font-size': 64, 'text-anchor': 'middle', fill: '#FFFBF2', stroke: OUT, 'stroke-width': 3, 'paint-order': 'stroke' }, cover).textContent = '?';
+    const read = label(svg, JX + JW / 2, JT - 24, '0 ml', INK, 26);
+    const rot = S('g', {}, svg), bottle = S('g', { transform: 'translate(-56,-45)' }, rot);
     P(bottle, 'M146,62h28v30c0,14 28,22 28,54v108a16,16 0 0 1 -16,16h-52a16,16 0 0 1 -16,-16v-108c0,-32 28,-40 28,-54z', '#93A84E');
     S('path', { d: 'M121,168h78v86a13,13 0 0 1 -13,13h-52a13,13 0 0 1 -13,-13z', fill: OIL, opacity: .8 }, bottle);
     P(bottle, 'M127,188h66v50h-66z', '#FFF6E4', { 'stroke-width': 3 }); S('ellipse', { cx: 150, cy: 213, rx: 9, ry: 12, fill: '#5E7A2E', transform: 'rotate(-20 150 213)' }, bottle); S('circle', { cx: 147, cy: 208, r: 2.5, fill: '#fff', opacity: .6 }, bottle);
@@ -552,20 +602,18 @@ CH.pour = {
     P(bottle, 'M141,60h38v10h-38z', '#6F8436', { 'stroke-width': 3 }); P(bottle, 'M145,38h30l-3,24h-24z', '#D2A56B'); S('path', { d: 'M150,46h20M151,53h18', stroke: '#B88A52', 'stroke-width': 2 }, bottle);
     shine(bottle, 'M132,150v96', 6, .45); shine(bottle, 'M152,70v18', 4, .5);
 
-    const stream = S('line', { x1: 160, y1: 160, x2: 160, y2: 160, stroke: OIL, 'stroke-width': 26, 'stroke-linecap': 'round', visibility: 'hidden' }, svg);
-    const word = label(svg, 160, 306, '', INK, 24);
+    const word = label(svg, 160, 334, '', INK, 20);
     api.btn('Tip to pour', false);
     if (Sense.sim) { Sense.s.tilt = 0; dragger(api.root, { move: (q, d) => { Sense.s.tilt = clamp(Sense.s.tilt + d.y * 1.3, 0, 180); }, up: () => { Sense.s.tilt = 0; } }); }
     const stop = ticker(dt => {
-      const t = Sense.tilt(); clock += dt; shown += (t - shown) * Math.min(1, dt * 16); if (Sense.sim) bottle.setAttribute('transform', `rotate(${shown} 160 165)`);
-      pool.setAttribute('rx', Math.min(70, Math.sqrt(v) * 9)); pool.setAttribute('ry', Math.min(8, Math.sqrt(v)));
+      const t = Sense.tilt(); clock += dt; shown += (t - shown) * Math.min(1, dt * 16); rot.setAttribute('transform', `rotate(${shown} 104 120)`);
       // olive oil: a trickle just past level, up to about 22 ml a second fully upended, with a slight lag
       flow += ((t > 90 ? 2 + 20 * Math.pow(Math.sin(rad(t - 90)), 0.7) : 0) - flow) * Math.min(1, dt * 7);
+      if (v < 10) { oil.setAttribute('y', ly(v)); oil.setAttribute('height', JB - 2 - ly(v)); surf.setAttribute('cy', ly(v)); surf.setAttribute('visibility', v > 0.2 ? 'visible' : 'hidden'); read.textContent = `${Math.floor(v)} ml`; }
+      else if (!covered) { covered = true; cover.setAttribute('visibility', 'visible'); cover.setAttribute('class', 'popin'); read.textContent = '? ml'; Snd.tap(); Hap.thump(); }
       if (flow > 0.4) { v = Math.min(400, v + flow * dt); started = true;
-        const d = Sense.down(), m = Math.hypot(d.x, d.y) || 1; stream.setAttribute('stroke-width', 7 + flow * 0.8 + Math.sin(clock * 26) * 2);
-        if (Sense.sim) { const mx = 160 + 125 * Math.sin(rad(shown)), my = 165 - 125 * Math.cos(rad(shown)); stream.setAttribute('x1', mx); stream.setAttribute('y1', my); stream.setAttribute('x2', mx); stream.setAttribute('y2', 272); }
-        else { stream.setAttribute('x1', 160); stream.setAttribute('y1', 44); stream.setAttribute('x2', 160 + d.x / m * 700); stream.setAttribute('y2', 44 - d.y / m * 700); }
-        stream.setAttribute('visibility', 'visible'); word.textContent = 'Pouring…';
+        const mx = 104 + 125 * Math.sin(rad(shown)), my = 120 - 125 * Math.cos(rad(shown)), tx = clamp(mx, JX + 20, JX + JW - 20), ty = covered ? JT - 8 : ly(v);
+        stream.setAttribute('d', `M${mx},${my}Q${mx},${(my + ty) / 2 + 14} ${tx},${ty}`); stream.setAttribute('stroke-width', 6 + flow * 0.7 + Math.sin(clock * 26) * 1.6); stream.setAttribute('visibility', 'visible'); word.textContent = '';
         hap -= dt; if (hap <= 0) { hap = 0.16 - flow * 0.005; Hap.tick(10); }
         glug -= dt; if (glug <= 0) { glug = 0.24 - flow * 0.006; Snd.tone(150 + Math.random() * 60, 0.09, { to: 90, vol: 0.12 }); } }
       else { stream.setAttribute('visibility', 'hidden'); word.textContent = started && !Sense.sim ? 'Stand it upright to finish' : '';
@@ -573,7 +621,7 @@ CH.pour = {
     });
     return {
       ready: () => false, answer: () => v,
-      reveal() { stop(); svg.innerHTML = ''; word.textContent = ''; const top = 46, bot = 282, H = bot - top, max = Math.max(p.ml, v) * 1.3, y = q => bot - q / max * H;
+      reveal() { stop(); svg.innerHTML = ''; word.textContent = ''; read.textContent = ''; const top = 46, bot = 282, H = bot - top, max = Math.max(p.ml, v) * 1.3, y = q => bot - q / max * H;
         shadow(svg, 160, bot + 6, 78, 9); S('path', { d: 'M208,96h30a16,16 0 0 1 16,16v78a16,16 0 0 1 -16,16h-30', fill: 'none', stroke: OUT, 'stroke-width': 16, 'stroke-linecap': 'round' }, svg); S('path', { d: 'M208,96h30a16,16 0 0 1 16,16v78a16,16 0 0 1 -16,16h-30', fill: 'none', stroke: '#E4F0EE', 'stroke-width': 8, 'stroke-linecap': 'round' }, svg);
         S('path', { d: `M110,${top}V${bot}H210V${top}z`, fill: '#EAF4F2' }, svg);
         S('rect', { x: 112, y: y(v), width: 96, height: bot - y(v), fill: OIL, class: 'pop' }, svg); S('ellipse', { cx: 160, cy: y(v), rx: 47, ry: 5, fill: '#F4D24A', class: 'pop' }, svg);
@@ -588,6 +636,7 @@ CH.pour = {
 };
 
 CH.dial = {
+  ask: 'Turn the dial to', goal: p => `${p.deg}°`,
   simHint: 'Drag in a circle to turn the dial, either way',
   name: 'Oven dial', icon: '🌡️', tau: 16, motion: true, hint: 'Hold the phone up facing you and turn it like a knob, either way. Tap the screen to set it',
   gen(g) { return { deg: ri(g, 4, 34) * 5 }; },
@@ -624,6 +673,7 @@ CH.dial = {
 };
 
 CH.whisk = {
+  ask: 'Whisk in time with', goal: () => 'the beat',
   simHint: 'Listen to four beats, then stir in circles around the yolk at that speed',
   name: 'Whisk', icon: '🥚', tau: 20, motion: true, hint: 'Listen to four beats, then whisk the phone in small circles at that speed',
   gen(g) { return { bpm: ri(g, 8, 18) * 10 }; },
@@ -664,6 +714,7 @@ CH.whisk = {
 };
 
 CH.flour = {
+  ask: 'Shake out exactly', goal: p => `${p.g} g`,
   simHint: 'Scrub back and forth over the board to shake the bag. Faster shakes pour faster',
   name: 'Flour', icon: '🌾', tau: 25, motion: true, hint: 'Tip the phone a little and shake it like a bag of flour. More tip and harder shakes pour faster. The scale goes blank after 10 g',
   gen(g) { return { g: ri(g, 4, 16) * 25 }; },
@@ -702,6 +753,7 @@ CH.flour = {
 };
 
 CH.level = {
+  ask: 'Level the cake with', goal: () => Sense.sim ? 'one straight cut' : 'a dead-flat slide',
   simHint: 'Press the left edge of the cake and drag the knife across in one dead-level line',
   name: 'Level the cake', icon: '🎂', tau: 7, motion: true, hint: 'Lay the phone flat on your palm, screen up. Tap to start, then slide it sideways through the air, keeping it dead level, until the knife is across',
   gen() { return {}; },
@@ -752,6 +804,7 @@ function blobColumns(pts) { const xs = pts.map(q => q[0]), x0 = Math.min(...xs),
   const inv = t => { let lo = x0, hi = x1; for (let k = 0; k < 40; k++) { const m = (lo + hi) / 2; share(m) < t ? lo = m : hi = m; } return (lo + hi) / 2; };
   return { x0, x1, share, inv }; }
 CH.cut = {
+  ask: 'Cut the dough into', goal: p => `${p.n} equal pieces`,
   name: 'Cut the dough', icon: '🔪', tau: 30, hint: 'Drag each knife from the left onto the dough',
   gen(g) { return { n: ri(g, 2, 5), R: rr(g, 78, 92), sx: rr(g, 1.15, 1.4), w: [0, 1, 2].map(() => ({ a: rr(g, 0.06, 0.2), ph: rr(g, 0, 6.28) })) }; },
   prompt: p => `Cut the dough into ${p.n} equal pieces.`,
@@ -780,6 +833,7 @@ CH.cut = {
 };
 
 CH.timer = {
+  ask: 'Stop the timer at', goal: p => `${p.T}.00 s`,
   name: 'Oven timer', icon: '⏲️', tau: 25, hint: 'The hand hides after one second. Keep counting in your head',
   gen(g) { return { T: ri(g, 3, 14) }; },
   prompt: p => `Stop the oven timer at exactly ${p.T}.00 seconds.`,
@@ -814,44 +868,9 @@ CH.timer = {
   score(p, t) { const d = t - p.T, e = Math.abs(d) / p.T * 100; return { err: e, off: Math.abs(d) < 0.005 ? 'To the hundredth. Unreal' : `You stopped at ${t.toFixed(2)} s, ${Math.abs(d).toFixed(2)} ${d > 0 ? 'late' : 'early'}` }; }
 };
 
-CH.chips = {
-  name: 'Chocolate chips', icon: '🍪', tau: 60, hint: 'The cookie only shows for a second and a half',
-  gen(g) { const n = ri(g, 7, 34), pts = []; let guard = 0;
-    while (pts.length < n && guard++ < 20000) { const r = rr(g, 6, 9.5), a = rr(g, 0, 6.283), d = Math.sqrt(g()) * 108, x = 160 + Math.cos(a) * d, y = 160 + Math.sin(a) * d;
-      if (pts.every(q => Math.hypot(q.x - x, q.y - y) > q.r + r + 3)) pts.push({ x, y, r }); }
-    return { n: pts.length, pts }; },
-  prompt: () => 'How many chocolate chips are on the cookie?',
-  mount(api, p) {
-    const svg = api.svg; let phase = 'ready', val = null, timer = null, slider;
-    api.bg('tray'); const edge = Array.from({ length: 48 }, (_, k) => { const a = k / 48 * 6.283, r = 128 + Math.sin(k * 2.7) * 4 + Math.sin(k * 1.3) * 3; return [160 + Math.cos(a) * r, 160 + Math.sin(a) * r].join(','); }).join(' ');
-    S('polygon', { points: edge, fill: '#5B3A22', opacity: .2, transform: 'translate(4,7)' }, svg); S('polygon', { points: edge, fill: '#D29A52', stroke: OUT, 'stroke-width': 5, 'stroke-linejoin': 'round' }, svg); S('circle', { cx: 156, cy: 155, r: 112, fill: '#E3B46C' }, svg);
-    S('path', { d: 'M70,120q10,6 8,18M232,96q-10,8 -6,20M96,236q12,-2 18,8M214,232q8,-10 20,-8M150,70q8,6 18,2', fill: 'none', stroke: '#C4893F', 'stroke-width': 3, 'stroke-linecap': 'round' }, svg); shine(svg, 'M84,92q24,-30 60,-36', 6, .35);
-    const msg = label(svg, 160, 168, 'Ready?', INK, 44);
-    const dots = S('g', { visibility: 'hidden' }, svg); p.pts.forEach(q => { S('circle', { cx: q.x, cy: q.y, r: q.r, fill: CHOC, stroke: '#2E170B', 'stroke-width': 1.5 }, dots); S('circle', { cx: q.x - q.r * .3, cy: q.y - q.r * .35, r: q.r * .28, fill: '#8A5A3C' }, dots); });
-    const big = S('text', { x: 160, y: 200, 'font-size': 110, 'text-anchor': 'middle', fill: YOU, visibility: 'hidden', 'paint-order': 'stroke', stroke: '#FFFBF2', 'stroke-width': 8 }, svg);
-    api.btn('Show the cookie', true);
-    const set = v => { val = clamp(Math.round(v), 1, 60); big.textContent = val; slider.value = val; api.changed(); };
-    return {
-      ready: () => phase === 'input' && val !== null,
-      primary() {
-        if (phase === 'ready') { phase = 'flash'; msg.remove(); dots.setAttribute('visibility', 'visible'); Snd.beep(true); api.btn('Look', false);
-          timer = setTimeout(() => { dots.setAttribute('visibility', 'hidden'); phase = 'input'; Snd.beep(false); big.textContent = '?'; big.setAttribute('visibility', 'visible');
-            api.controls.innerHTML = '<div class="counter"><button type="button" aria-label="One fewer">−</button><input type="range" min="1" max="60" value="30" aria-label="Your count"><button type="button" aria-label="One more">+</button></div>';
-            const [minus, plus] = api.controls.querySelectorAll('button'); slider = api.controls.querySelector('input');
-            slider.addEventListener('input', () => set(+slider.value)); minus.addEventListener('click', () => set((val === null ? +slider.value : val) - 1)); plus.addEventListener('click', () => set((val === null ? +slider.value : val) + 1));
-            api.hint('Slide to your best guess, then fine-tune with − and +'); api.btn('Lock it in', false); }, 1500);
-          return undefined; }
-        return phase === 'input' && val !== null ? val : undefined; },
-      answer: () => val, nudge: dx => { if (phase === 'input') set((val === null ? 30 : val) + Math.sign(dx)); },
-      reveal() { api.controls.innerHTML = ''; big.setAttribute('visibility', 'hidden'); dots.setAttribute('visibility', 'visible'); Array.from(dots.childNodes).forEach((c, k) => { c.setAttribute('class', 'popin'); c.style.animationDelay = (k * 12) + 'ms'; }); label(svg, 160, 312, `${p.n} chips`, TRUTH, 24); },
-      destroy() { clearTimeout(timer); }
-    };
-  },
-  score(p, v) { const e = Math.abs(v - p.n) / p.n * 100; return { err: e, off: v === p.n ? `Exactly ${p.n}. Spot on` : `There were ${p.n}. You said ${v}` }; }
-};
-
 const MULT = [1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.5];
 CH.proof = {
+  ask: () => Sense.sim ? 'Stop the dough at' : 'Raise the dough to', goal: p => `×${p.m} its size`,
   name: 'Proof the dough', icon: '🍞', tau: 20, motion: true, simHint: 'The dashed line is where it started. It rises slowly, so be patient', hint: 'Lift your phone to raise the dough and lower it to shrink it. Give the phone a small shake to lock it in',
   gen(g) { return { m: pick(g, MULT), rate: rr(g, 0.09, 0.14) }; },
   prompt: p => Sense.sim ? `Stop the dough when it is exactly ${p.m} times its size.` : `Raise the dough to exactly ${p.m} times its size.`,
@@ -947,12 +966,6 @@ const ENV = {
     P(f, 'M20,340h280a10,10 0 0 1 10,10v84a10,10 0 0 1 -10,10h-280a10,10 0 0 1 -10,-10v-84a10,10 0 0 1 10,-10z', '#AEB5BC'); P(f, 'M26,348h268v84h-268z', '#F6ECD8', { 'stroke-width': 3 });
     [[70, 390, 0], [140, 384, 1], [212, 394, 0], [272, 380, 1]].forEach(([x, y, k]) => { S('circle', { cx: x, cy: y, r: 26, fill: k ? '#D9A45B' : '#E3B46C', stroke: OUT, 'stroke-width': 4 }, f); S('path', { d: `M${x - 10},${y - 6}q10,-10 20,0M${x - 12},${y + 8}q12,8 24,0`, fill: 'none', stroke: '#C4893F', 'stroke-width': 3, 'stroke-linecap': 'round' }, f); });
     P(f, 'M-90,276v-60q0,-22 26,-22q26,0 26,22v60z', '#E0584A'); P(f, 'M-90,262h52v14h-52z', '#FFF6E4', { 'stroke-width': 3 }); P(f, 'M360,276v-44h40v44z', '#BFDCD4'); S('path', { d: 'M400,244q16,0 14,14q-2,10 -14,8', fill: 'none', stroke: OUT, 'stroke-width': 4 }, f); },
-  chips(u, f) { fullR(u, 'url(#pMarble)'); S('rect', { x: -4, y: 2, width: 336, height: 336, rx: 26, fill: '#5B3A22', opacity: .18 }, f); P(f, 'M10,-14h300a22,22 0 0 1 22,22v304a22,22 0 0 1 -22,22h-300a22,22 0 0 1 -22,-22v-304a22,22 0 0 1 22,-22z', '#B8BEC5'); P(f, 'M14,2h292a10,10 0 0 1 10,10v296a10,10 0 0 1 -10,10h-292a10,10 0 0 1 -10,-10v-296a10,10 0 0 1 10,-10z', '#F6ECD8', { 'stroke-width': 3 }); shine(f, 'M0,10v120', 4, .6);
-    P(f, 'M30,360h260a10,10 0 0 1 10,10v100h-280v-100a10,10 0 0 1 10,-10z', 'none'); for (let x = 46; x < 290; x += 22) S('path', { d: `M${x},362v110`, stroke: '#9AA3AD', 'stroke-width': 3 }, f);
-    [[84, 418], [160, 410], [236, 420]].forEach(([x, y], k) => { S('circle', { cx: x, cy: y, r: 30, fill: k % 2 ? '#F1C98A' : '#EBC07C', stroke: OUT, 'stroke-width': 4 }, f); S('circle', { cx: x, cy: y, r: 9, fill: '#D8483B', stroke: OUT, 'stroke-width': 3 }, f); });
-    S('circle', { cx: 268, cy: -66, r: 36, fill: '#E4F0EE', stroke: OUT, 'stroke-width': 4.5 }, f); S('circle', { cx: 268, cy: -66, r: 27, fill: '#FFFDF8' }, f); shine(f, 'M250,-76q6,-12 18,-14', 4, .9);
-    const sp = S('g', { transform: 'translate(20,-60) rotate(8)' }, f); P(sp, 'M0,-7h90v14h-90z', '#B5743C'); P(sp, 'M90,-22h60v44h-60z', '#D9DEE3'); S('path', { d: 'M104,-12v24M118,-12v24M132,-12v24', stroke: '#9AA3AD', 'stroke-width': 4, 'stroke-linecap': 'round' }, sp);
-    P(f, 'M-110,150q-30,-70 20,-90q50,-10 60,50q4,60 -20,90z', '#E0584A'); P(f, 'M380,60h70v90h-70z', '#F4D58A'); },
   proof(u, f) { fullR(u, '#FBF1DE'); band(u, 'url(#pBead)', 150, 262); band(u, '#EBCB98', 262, 336); band(u, 'url(#pDark)', 336, 1100); S('path', { d: `M${BIGR.x},150h${BIGR.width}M${BIGR.x},262h${BIGR.width}M${BIGR.x},336h${BIGR.width}`, stroke: OUT, 'stroke-width': 4 }, u);
     P(f, 'M92,-150h136a10,10 0 0 1 10,10v252a10,10 0 0 1 -10,10h-136a10,10 0 0 1 -10,-10v-252a10,10 0 0 1 10,-10z', '#8A5A3C'); P(f, 'M96,-140h128v236h-128z', '#CFE9F2', { 'stroke-width': 3 }); S('path', { d: 'M160,-140v236M96,-20h128', stroke: '#8A5A3C', 'stroke-width': 7 }, f); S('circle', { cx: 196, cy: 30, r: 20, fill: '#FFF3B8', opacity: .9 }, f); S('path', { d: 'M96,96q30,-30 64,-20q34,-14 64,20z', fill: '#9CC98A' }, f); shine(f, 'M108,-120l30,-14M108,-96l52,-26', 5, .7);
     P(f, 'M70,-150q20,60 -8,270h-34q10,-150 -8,-270z', '#E9A7A0'); P(f, 'M250,-150q-20,60 8,270h34q-10,-150 8,-270z', '#E9A7A0');
@@ -981,6 +994,15 @@ const dailyPlan = day => plan(day * 7919 + 20261114);
 
 /* ---------- the curve: baseline model blended with live anonymous counts ---------- */
 const BUCKETS = 20;
+const Rounds = { NB: 10, base: null, live: null, n: 0,
+  baseline() { if (this.base) return this.base; const g = mulberry32(424242), gauss = () => { let u = 0, v = 0; while (!u) u = g(); v = g(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }, pmf = new Array(this.NB).fill(0), N = 8000;
+    for (let i = 0; i < N; i++) { let e = Math.abs(gauss()) * 0.42 * Math.exp(0.5 * gauss()); if (g() < 0.07) e *= 3; pmf[Math.min(this.NB - 1, Math.floor(100 * Math.exp(-e) / (100 / this.NB)))]++; } return this.base = pmf.map(v => v / N); },
+  pct(score) { const b = this.baseline(), K = CONFIG.priorWeight, p = this.live && this.n ? b.map((v, i) => (this.live[i] + K * v) / (this.n + K)) : b, w = 100 / this.NB, i = Math.min(this.NB - 1, Math.floor(score / w)); let s = 0; for (let k = 0; k < i; k++) s += p[k];
+    return clamp(Math.round((s + p[i] * (score - i * w) / w) * 100), 1, 99); },
+  key: (day, r, b) => `d${String(day).padStart(4, '0')}-r${r}-b${b}`,
+  async sync(day, r, score) { if (!CONFIG.live) return false; await Curve.req(`hit/${CONFIG.liveNS}/${this.key(day, r, Math.min(this.NB - 1, Math.floor(score / (100 / this.NB))))}`);
+    const vals = await Promise.all(Array.from({ length: this.NB }, (_, b) => Curve.req(`get/${CONFIG.liveNS}/${this.key(day, r, b)}`))); if (vals.every(v => v === null)) return false;
+    this.live = vals.map(v => v || 0); this.n = this.live.reduce((a, b) => a + b, 0); return true; } };
 const Curve = {
   base: null, live: null, liveN: 0,
   baseline() {            // a modelled crowd: thousands of simulated players of mixed ability
@@ -1055,11 +1077,11 @@ function loadRound() {
   if (Game.inst && Game.inst.destroy) Game.inst.destroy();
   const r = Game.plan[Game.idx], ch = CH[r.id], wrap = $('#stagewrap');
   Game.phase = 'play'; renderRounds();
-  $('#kind').textContent = `${Game.idx + 1} of 4: ${ch.name}`;
+  $('#kind').textContent = typeof ch.ask === 'function' ? ch.ask() : ch.ask; $('#kind').dataset.name = ch.name;
   document.body.classList.toggle('motion', !!ch.motion); fixRot();
-  $('#prompt').textContent = ch.prompt(r.p);
-  wrap.innerHTML = ''; wrap.classList.remove('locked', 'in'); void wrap.offsetWidth; wrap.classList.add('in'); const cd = document.querySelector('.card'); cd.style.animation = 'none'; void cd.offsetWidth; cd.style.animation = ''; $('#controls').innerHTML = ''; const oldStamp = document.querySelector('.stamp'); if (oldStamp) oldStamp.remove();
-  const hint = $('#hint'); hint.classList.remove('res'); hint.textContent = Sense.sim && ch.simHint ? ch.simHint : ch.hint;
+  $('#prompt').textContent = ch.goal(r.p);
+  wrap.innerHTML = ''; wrap.classList.remove('locked', 'in'); void wrap.offsetWidth; wrap.classList.add('in'); const cd = document.querySelector('.panel'); cd.style.animation = 'none'; void cd.offsetWidth; cd.style.animation = ''; $('#controls').innerHTML = ''; $('#rsheet').hidden = true;
+  const hint = $('#hint'); hint.hidden = false; hint.classList.remove('gone'); hint.textContent = Sense.sim && ch.simHint ? ch.simHint : ch.hint;
   const svg = S('svg', { viewBox: '0 0 320 320', role: 'img', 'aria-label': ch.prompt(r.p) }, wrap);
   const WOB = '<filter id="ID" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="4" xChannelSelector="R" yChannelSelector="G"/></filter>';
   const bw = $('#sceneback'); bw.innerHTML = ''; bw.classList.remove('in'); void bw.offsetWidth; bw.classList.add('in');
@@ -1068,7 +1090,7 @@ function loadRound() {
   S('defs', {}, svg).innerHTML = WOB.replace('ID', 'wob');
   const art = S('g', { filter: 'url(#wob)' }, svg); TOP = S('g', {}, svg);
   const btn = $('#bMain'); btn.textContent = 'Lock it in'; btn.disabled = true;
-  const api = { svg: art, root: svg, bg() {}, controls: $('#controls'), changed() { Snd.tick(); btn.disabled = !Game.inst.ready(); }, btn(label, on) { btn.textContent = label; btn.disabled = !on; }, hint(t) { hint.textContent = t; fitScene(); }, lockNow(a) { lock(a); } };
+  const api = { svg: art, root: svg, bg() {}, controls: $('#controls'), changed() { Snd.tick(); btn.disabled = !Game.inst.ready(); hint.classList.add('gone'); }, btn(label, on) { btn.textContent = label; btn.disabled = !on; }, hint(t) { hint.textContent = t; fitScene(); }, lockNow(a) { lock(a); } };
   Game.inst = ch.mount(api, r.p); fitScene();
 }
 
@@ -1077,12 +1099,16 @@ function lock(answer) {
   const r = Game.plan[Game.idx], ch = CH[r.id], res = ch.score(r.p, answer), s = toScore(r.id, res.err), wrap = $('#stagewrap');
   Game.phase = 'revealed'; wrap.classList.add('locked'); wrap.firstChild.dataset.locked = '1';
   Game.inst.reveal(res); Game.scores.push(s); Game.offs.push(res.off);
-  const st = document.createElement('div'); st.className = 'stamp'; st.innerHTML = `<b>${Math.round(s)}</b><span>${verdict(s)}</span>`; $('#under').prepend(st); if (s >= 75) burst(st, s >= 95 ? 34 : s >= 88 ? 22 : 12);
+  $('#hint').hidden = true; $('#controls').innerHTML = ''; const sh = $('#rsheet'), sc = $('#rsScore'); sh.hidden = false; sh.style.animation = 'none'; void sh.offsetWidth; sh.style.animation = '';
+  sc.className = 'rs-score s-' + grade(s); $('#rsVerdict').textContent = verdict(s); $('#rsOff').textContent = res.off; $('#rsBar').style.width = '0%'; $('#rsPct').textContent = '';
+  const t0 = performance.now(); const up = n => { const k = clamp((n - t0) / 600, 0, 1); sc.textContent = Math.round(s * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(up); }; requestAnimationFrame(up);
+  const idx = Game.idx, showPct = () => { if (Game.idx !== idx || Game.phase !== 'revealed') return; const pc = Rounds.pct(s); $('#rsBar').style.width = pc + '%'; $('#rsPct').textContent = `Better than ${pc}% of bakers on this one`; };
+  Rounds.live = null; setTimeout(showPct, 250); if (Game.mode === 'daily') Rounds.sync(Game.day, idx, s).then(ok => ok && showPct());
+  if (s >= 75) setTimeout(() => burst(sc, s >= 95 ? 34 : s >= 88 ? 22 : 12), 450);
   Snd.thunk(); Snd.score(s); const ap = document.querySelector('.app'); ap.classList.remove('jolt'); void ap.offsetWidth; ap.classList.add('jolt'); buzz(s >= 90 ? [18, 40, 18] : 22);
-  const hint = $('#hint'); hint.classList.add('res'); hint.textContent = res.off; fitScene();
   if (Game.mode === 'daily') { Store.d.days[Game.day] = { s: Game.scores.slice(), o: Game.offs.slice(), ids: Game.plan.map(x => x.id), done: false }; Store.save(); }
   renderRounds();
-  const btn = $('#bMain'); btn.disabled = false; btn.textContent = Game.idx === 3 ? 'See your score' : 'Next';
+  const btn = $('#bMain'); btn.disabled = false; btn.textContent = Game.idx === 3 ? 'See how you did' : 'Next bake';
 }
 
 function next() {
@@ -1212,7 +1238,7 @@ function fixRot() { const o = screen.orientation, a = o && typeof o.angle === 'n
   document.body.classList.toggle('rot', land && document.body.classList.contains('motion')); document.documentElement.style.setProperty('--rot', (-a) + 'deg'); }
 addEventListener('orientationchange', fixRot); addEventListener('resize', fixRot);
 const PHONE = (matchMedia('(pointer:coarse)').matches && 'DeviceOrientationEvent' in window) || params.has('debug');
-if (!PHONE) $('#deskNote').hidden = false;
+
 function fitHero() { const h = document.querySelector('.hero'); if (!h || !h.querySelector('svg')) return; h.style.fontSize = '100px';
   const nat = h.querySelector('svg').getBoundingClientRect().width + 12 + h.querySelector('h1').getBoundingClientRect().width;
   if (nat > 0) h.style.fontSize = Math.min(128, Math.floor(100 * h.parentElement.clientWidth / nat * 0.985)) + 'px'; }
