@@ -1,15 +1,20 @@
 # Smidge
 
-The daily game of getting close. Five gut calls a day: cut a line, count a flash of dots, stop a hidden clock, open an angle, pour to a level, find a balance point, match a length, line two things up. Each call scores 0 to 100, the day's score is the average, and a curve shows where you land against everyone else.
+The daily baking game you play by feel. Four bakes a day, drawn from a pool of nine. Phones only: a computer gets a "play this on your phone" screen.
+
+Motion games (use the phone's tilt and shake sensors): Olive oil (tip past sideways to pour), Oven dial (turn the phone like a knob), Whisk (shake in time with a beat), Flour (tip and shake like a bag), Level the cake (hold the phone flat).
+Touch games: Cut the dough, Oven timer, Chocolate chips, Proof the dough.
 
 Play: https://sauv2616-hub.github.io/smidge/
 
 ## How it works
 
 - Everything is in `index.html`. No build step, no dependencies, no sound or image files (sounds are synthesised in the browser).
-- Each day's five challenges come from a seeded random generator keyed to the day number, so every player gets the same five. Smidge #1 is 14 November 2026.
+- Each day's four bakes come from a seeded random generator keyed to the day number, so every player gets the same four, always with at least one motion game and one touch game. Smidge #1 is 14 November 2026.
 - Progress, streaks and stats are saved in the player's browser (local storage). One go per day per device.
-- A round's score is `100 * exp(-error / tau)`; each challenge has its own `tau` in the `CH` table, which is the one number to change if a challenge turns out too harsh or too easy.
+- A round's score is `100 * exp(-error / tau)`; each game has its own `tau` in the `CH` table, which is the one number to change if a game turns out too harsh or too easy. Flow rates for oil and flour are in `CH.pour` and `CH.flour`.
+- Motion needs HTTPS and, on iPhone, the player tapping Allow when asked. The `Sense` object reads the sensors.
+- Add `?debug=1` to the address to open the game on a computer for testing (motion games will not respond without sensors).
 
 ## The curve
 
