@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Smidge: the daily game of getting close</title>
+<meta name="description" content="Five gut calls a day. No ruler, no counting, no clock. See how close you get, and how you rank against everyone else.">
+<meta name="theme-color" content="#FFD60A">
+<meta property="og:title" content="Smidge: the daily game of getting close">
+<meta property="og:description" content="Five gut calls a day. No ruler, no counting, no clock. How close can you get?">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://sauv2616-hub.github.io/smidge/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-512.png">
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --tape:#FFD60A; --tape-deep:#F2C200; --ink:#161616; --paper:#FFFEF8;
+  --you:#1F4FFF; --truth:#E4002B; --good:#12A150; --ok:#F2B705; --meh:#F27A1A; --bad:#D92B2B;
+  --display:"Barlow Condensed","Arial Narrow","Roboto Condensed",Impact,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+[hidden]{display:none!important}
+body{background:var(--tape);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.4;
+  -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(--you);outline-offset:3px}
+.app{min-height:100dvh;display:flex;flex-direction:column}
+
+/* the tape: ruler ticks run along the top edge of everything */
+.tape{height:52px;flex:none;display:flex;align-items:flex-start;justify-content:space-between;padding:8px 14px 0;
+  background:
+    repeating-linear-gradient(90deg,var(--ink) 0 2px,transparent 2px 50px) 0 100%/100% 18px no-repeat,
+    repeating-linear-gradient(90deg,var(--ink) 0 1px,transparent 1px 10px) 0 100%/100% 9px no-repeat;
+  border-bottom:2px solid var(--ink)}
+.tape .mark{font:800 24px/1 var(--display);letter-spacing:.02em}
+.tape nav{display:flex;gap:4px}
+.tape nav button{width:34px;height:30px;border-radius:8px;display:grid;place-items:center}
+.tape nav button:hover{background:rgba(0,0,0,.08)}
+.tape nav svg{width:20px;height:20px;stroke:var(--ink);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+main{flex:1;width:100%;max-width:460px;margin:0 auto;padding:14px 18px calc(18px + env(safe-area-inset-bottom));display:flex;flex-direction:column}
+.screen{display:none;flex:1;flex-direction:column}
+.screen.on{display:flex}
+
+.btn{display:block;width:100%;padding:15px 18px;border-radius:14px;background:var(--ink);color:var(--tape);
+  font:700 22px/1 var(--display);letter-spacing:.03em;text-align:center;box-shadow:0 5px 0 rgba(0,0,0,.28);
+  transition:transform .06s,box-shadow .06s,opacity .15s;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 rgba(0,0,0,.28)}
+.btn[disabled]{opacity:.35;pointer-events:none}
+.btn.alt{background:var(--paper);color:var(--ink);border:2.5px solid var(--ink);box-shadow:0 5px 0 var(--ink)}
+.btn.alt:active{box-shadow:0 1px 0 var(--ink)}
+.link{font-weight:600;text-decoration:underline;text-underline-offset:3px;padding:8px 4px}
+
+/* home */
+#home{justify-content:center;gap:22px;padding-bottom:6vh}
+.hero{display:flex;align-items:center;gap:.12em;font-size:84px;white-space:nowrap}
+.hero svg{width:.8em;height:.8em;flex:none}
+.hero h1{font:800 1em/.82 var(--display);letter-spacing:-.01em;flex:none}
+.lede{font-size:19px;max-width:24em}
+.today{background:var(--paper);border:2.5px solid var(--ink);border-radius:18px;box-shadow:0 6px 0 var(--ink);padding:16px 16px 18px}
+.today .when{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+.today .num{font:800 30px/1 var(--display);white-space:nowrap}
+.today .date{font-size:15px;opacity:.7}
+.five{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;list-style:none}
+.five li{font:600 15px/1 var(--body);padding:7px 10px;border-radius:99px;border:1.5px solid var(--ink)}
+.five li.done{background:var(--ink);color:var(--paper)}
+.friend{background:var(--ink);color:var(--tape);border-radius:14px;padding:12px 14px;font-weight:500}
+.friend b{font:800 22px/1 var(--display)}
+.home-links{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap}
+.streak{font:700 20px/1 var(--display)}
+
+/* game */
+.rounds{display:grid;grid-template-columns:repeat(5,1fr);border:2px solid var(--ink);border-radius:10px;overflow:hidden;margin-bottom:12px;background:var(--tape-deep)}
+.rounds div{height:30px;display:grid;place-items:center;font:700 17px/1 var(--display);border-left:2px solid var(--ink);position:relative}
+.rounds div:first-child{border-left:0}
+.rounds div.now{background:var(--paper)}
+.rounds div.now::after{content:"";position:absolute;bottom:-2px;left:50%;margin-left:-6px;border:6px solid transparent;border-bottom-color:var(--truth)}
+.rounds div.s-top,.rounds div.s-good{background:var(--good);color:#fff}
+.rounds div.s-ok{background:var(--ok)}
+.rounds div.s-meh{background:var(--meh);color:#fff}
+.rounds div.s-bad{background:var(--bad);color:#fff}
+.kind{font:700 17px/1 var(--display);letter-spacing:.04em;opacity:.65;margin-bottom:2px}
+.prompt{font:700 clamp(25px,7.2vw,31px)/1.05 var(--display);min-height:2.1em;margin-bottom:10px;text-wrap:balance}
+.stagewrap{position:relative;width:100%;max-width:min(100%,48dvh);margin:0 auto;aspect-ratio:1;background:var(--paper);
+  border:2.5px solid var(--ink);border-radius:18px;box-shadow:0 6px 0 var(--ink);overflow:hidden}
+.stagewrap svg{display:block;width:100%;height:100%;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
+.stagewrap.locked svg{cursor:default}
+svg text{font-family:var(--display);font-weight:700}
+.stamp{flex:none;padding:4px 10px 5px;border:3px solid var(--truth);border-radius:8px;color:var(--truth);
+  background:var(--paper);text-align:center;transform:rotate(-7deg);animation:slam .24s cubic-bezier(.2,1.4,.4,1) both}
+.stamp b{display:block;font:800 42px/.9 var(--display)}
+.stamp span{font:700 15px/1 var(--display);letter-spacing:.04em}
+@keyframes slam{from{transform:rotate(-7deg) scale(2.4);opacity:0}to{transform:rotate(-7deg) scale(1);opacity:1}}
+.controls{min-height:0;margin-top:12px}
+.counter{display:flex;align-items:center;gap:10px}
+.counter button{width:46px;height:46px;flex:none;border-radius:12px;border:2.5px solid var(--ink);background:var(--paper);font:800 28px/1 var(--display);box-shadow:0 3px 0 var(--ink)}
+.counter button:active{transform:translateY(3px);box-shadow:none}
+input[type=range]{-webkit-appearance:none;appearance:none;flex:1;height:46px;background:transparent}
+input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:4px;background:var(--ink)}
+input[type=range]::-moz-range-track{height:8px;border-radius:4px;background:var(--ink)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:30px;height:30px;margin-top:-11px;border-radius:50%;background:var(--you);border:3px solid var(--ink)}
+input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:var(--you);border:3px solid var(--ink)}
+.under{display:flex;align-items:center;justify-content:center;gap:16px;min-height:74px;margin:10px 0 12px}
+.hint{text-align:center;font-size:16px}
+.hint.res{font-weight:600;font-size:18px;text-align:left}
+#game .btn{margin-top:auto}
+
+/* result */
+#result{gap:14px}
+.res-head{display:flex;justify-content:space-between;align-items:flex-end}
+.res-head .num{font:700 20px/1 var(--display);opacity:.7}
+.total{font:800 clamp(92px,30vw,128px)/.8 var(--display);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.total small{font-size:.3em;font-weight:700;opacity:.55;letter-spacing:0;margin-left:4px}
+.rank{font:700 26px/1.05 var(--display)}
+.rank em{font-style:normal;background:var(--ink);color:var(--tape);padding:0 7px;border-radius:6px}
+.vs{font-weight:600}
+.curve{background:var(--paper);border:2.5px solid var(--ink);border-radius:18px;box-shadow:0 6px 0 var(--ink);padding:12px 12px 8px}
+.curve svg{display:block;width:100%;height:auto;overflow:visible}
+.curve p{font-size:13.5px;opacity:.7;margin-top:4px;text-align:center}
+.rows{list-style:none;border-top:2px solid var(--ink)}
+.rows li{display:grid;grid-template-columns:30px 1fr auto;gap:8px;align-items:center;padding:8px 0;border-bottom:2px solid var(--ink)}
+.rows .ic{font-size:20px;text-align:center}
+.rows .nm{font:700 20px/1 var(--display)}
+.rows .of{font-size:14px;opacity:.72;display:block}
+.rows .sc{font:800 24px/1 var(--display);min-width:46px;text-align:center;padding:5px 6px;border-radius:8px}
+.s-top,.s-good{background:var(--good);color:#fff}.s-ok{background:var(--ok)}.s-meh{background:var(--meh);color:#fff}.s-bad{background:var(--bad);color:#fff}
+.after{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.next{font:700 20px/1 var(--display)}
+.next b{font-variant-numeric:tabular-nums}
+.practice-note{background:var(--ink);color:var(--tape);border-radius:10px;padding:8px 12px;font-weight:500;text-align:center}
+.ad-slot{display:none;min-height:100px;margin-top:6px}
+.ad-slot.on{display:block}
+footer{text-align:center;font-size:13.5px;opacity:.7;padding:4px 0 2px}
+footer a{color:inherit}
+
+/* sheets */
+.sheet{position:fixed;inset:0;background:rgba(22,22,22,.55);display:none;align-items:flex-end;justify-content:center;z-index:20}
+.sheet.on{display:flex}
+.sheet>div{background:var(--paper);width:100%;max-width:460px;max-height:88dvh;overflow:auto;border-radius:22px 22px 0 0;border:2.5px solid var(--ink);border-bottom:0;
+  padding:22px 20px calc(24px + env(safe-area-inset-bottom));animation:up .22s ease-out}
+@keyframes up{from{transform:translateY(40px);opacity:0}}
+.sheet h2{font:800 34px/1 var(--display);margin-bottom:12px}
+.sheet ul{padding-left:1.1em;margin-bottom:16px}
+.sheet li{margin-bottom:8px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:18px;text-align:center}
+.grid4 b{display:block;font:800 34px/1 var(--display)}
+.grid4 span{font-size:13px;opacity:.7}
+.bars{list-style:none;padding:0!important}
+.bars li{display:grid;grid-template-columns:86px 1fr 34px;gap:8px;align-items:center;font:700 18px/1 var(--display)}
+.bars i{display:block;height:14px;border-radius:4px;background:var(--ink)}
+.bars li.best i{background:var(--good)}
+.toast{position:fixed;left:50%;bottom:calc(26px + env(safe-area-inset-bottom));transform:translate(-50%,20px);background:var(--ink);color:var(--paper);
+  padding:10px 16px;border-radius:99px;font-weight:600;opacity:0;transition:.2s;pointer-events:none;z-index:30;white-space:nowrap}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+.you-s{stroke:var(--you);stroke-width:4;stroke-linecap:round;fill:none}
+.truth-s{stroke:var(--truth);stroke-width:4;stroke-linecap:round;fill:none}
+.ink-s{stroke:var(--ink);stroke-width:4;stroke-linecap:round;stroke-linejoin:round;fill:none}
+.dim{stroke:var(--truth);stroke-width:1.5;fill:none}
+.pop{animation:pop .3s ease-out both}
+@keyframes pop{from{opacity:0}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;transition-duration:.01s!important}}
+@media (min-width:700px){main{padding-top:26px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="tape">
+    <button class="mark" id="goHome" aria-label="Smidge home">SMIDGE</button>
+    <nav>
+      <button id="bHelp" aria-label="How it works"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.6 2.3c-.8.5-1.2 1-1.2 2"/><path d="M12 17v.01"/></svg></button>
+      <button id="bStats" aria-label="Your stats"><svg viewBox="0 0 24 24"><path d="M5 20V11M12 20V4M19 20v-6"/></svg></button>
+      <button id="bSound" aria-label="Sound on or off"><svg viewBox="0 0 24 24"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z"/><path id="sWave" d="M15.5 9a4.5 4.5 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/></svg></button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="screen on" id="home">
+      <div class="hero">
+        <svg viewBox="0 0 100 100" aria-hidden="true">
+          <circle cx="50" cy="50" r="40" fill="none" stroke="#161616" stroke-width="7"/>
+          <path d="M50 4v14M50 82v14M4 50h14M82 50h14" stroke="#161616" stroke-width="5"/>
+          <circle cx="50" cy="50" r="5" fill="#E4002B"/>
+          <circle id="heroDot" cx="59" cy="44" r="9" fill="#1F4FFF"/>
+        </svg>
+        <h1>SMIDGE</h1>
+      </div>
+      <p class="lede">Five gut calls a day. No ruler, no counting, no clock. See how close you get, then see where you land against everyone else.</p>
+      <div class="friend" id="friend" hidden></div>
+      <div class="today">
+        <div class="when"><span class="num" id="hNum"></span><span class="date" id="hDate"></span></div>
+        <ul class="five" id="hFive"></ul>
+        <button class="btn" id="bPlay">Play today's five</button>
+      </div>
+      <div class="home-links">
+        <span class="streak" id="hStreak"></span>
+        <button class="link" id="bPractice" hidden>Play a practice round</button>
+      </div>
+      <footer><a href="privacy.html">Privacy</a></footer>
+    </section>
+
+    <section class="screen" id="game">
+      <div class="rounds" id="rounds" aria-label="Round progress"></div>
+      <div class="kind" id="kind"></div>
+      <h2 class="prompt" id="prompt"></h2>
+      <div class="stagewrap" id="stagewrap"></div>
+      <div class="controls" id="controls"></div>
+      <div class="under" id="under"><p class="hint" id="hint" aria-live="polite"></p></div>
+      <button class="btn" id="bMain">Lock it in</button>
+    </section>
+
+    <section class="screen" id="result">
+      <div class="practice-note" id="pNote" hidden>Practice round. It doesn't count towards your stats or the daily curve.</div>
+      <div class="res-head"><span class="num" id="rNum"></span><span class="streak" id="rStreak"></span></div>
+      <div class="total"><span id="rTotal">0.0</span><small>/100</small></div>
+      <div class="rank" id="rRank"></div>
+      <div class="vs" id="rVs" hidden></div>
+      <div class="curve">
+        <svg id="curve" viewBox="0 -20 320 146" role="img" aria-label="How today's players scored"></svg>
+        <p id="curveNote"></p>
+      </div>
+      <button class="btn" id="bShare">Share your score</button>
+      <ul class="rows" id="rRows"></ul>
+      <div class="after">
+        <span class="next">Next Smidge in <b id="rCount">--:--:--</b></span>
+        <button class="link" id="bPractice2">Play a practice round</button>
+      </div>
+      <div class="ad-slot" id="adResult"></div>
+      <footer><a href="privacy.html">Privacy</a></footer>
+    </section>
+  </main>
+</div>
+
+<div class="sheet" id="shHelp" role="dialog" aria-modal="true" aria-labelledby="hlpT"><div>
+  <h2 id="hlpT">How Smidge works</h2>
+  <ul>
+    <li>You get five quick gut calls a day: cut a line, count a flash of dots, stop a hidden clock, and so on.</li>
+    <li>No ruler, no counting on your fingers, no watch. Trust your eye.</li>
+    <li>Each call scores up to 100. The closer you get, the higher it goes.</li>
+    <li>Everyone gets the same five, and you get one go. A new Smidge lands at midnight.</li>
+  </ul>
+  <button class="btn" data-close>Got it</button>
+</div></div>
+
+<div class="sheet" id="shStats" role="dialog" aria-modal="true" aria-labelledby="stT"><div>
+  <h2 id="stT">Your stats</h2>
+  <div class="grid4" id="stGrid"></div>
+  <p id="stSharp" style="font-weight:600;margin-bottom:10px"></p>
+  <ul class="bars" id="stBars"></ul>
+  <button class="btn" data-close style="margin-top:18px">Close</button>
+</div></div>
+
+<div class="toast" id="toast" role="status"></div>
+<noscript><p style="padding:20px">Smidge needs JavaScript to run.</p></noscript>
+
+<script>
+(() => {
+'use strict';
+
+/* ---------- settings you may want to change ---------- */
+const CONFIG = {
+  launch: [2026, 10, 14],          // Smidge #1 = 14 Nov 2026 (month is 0-based)
+  siteUrl: '',                     // set to your domain once you have one; blank = wherever this page is hosted
+  live: true,                      // anonymous score counters for the real daily curve
+  liveBase: 'https://abacus.jasoncameron.dev',
+  liveNS: 'smidge-daily',
+  priorWeight: 40,                 // how many "baseline players" the live curve is blended with
+  adsenseClient: '',               // e.g. 'ca-pub-1234567890123456' once AdSense approves the site
+  adsenseSlotResult: ''            // ad unit id for the slot under the results
+};
+
+/* ---------- small helpers ---------- */
+const $ = s => document.querySelector(s);
+const NS = 'http://www.w3.org/2000/svg';
+const S = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const rad = d => d * Math.PI / 180;
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const rr = (g, a, b) => a + (b - a) * g();
+const ri = (g, a, b) => Math.floor(rr(g, a, b + 1));
+const pick = (g, arr) => arr[Math.floor(g() * arr.length)];
+const fmt = v => v < 10 ? (Math.round(v * 10) / 10).toFixed(1) : String(Math.round(v));
+const INK = '#161616', YOU = '#1F4FFF', TRUTH = '#E4002B';
+
+function dayNumber(d = new Date()) {
+  const a = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+  return Math.max(1, Math.round((a - Date.UTC(...CONFIG.launch)) / 864e5) + 1);
+}
+
+/* ---------- saved data (this device only) ---------- */
+const Store = {
+  key: 'smidge.v1', d: null,
+  load() { try { this.d = JSON.parse(localStorage.getItem(this.key)) || {}; } catch (e) { this.d = {}; }
+    this.d.days = this.d.days || {}; this.d.ch = this.d.ch || {};
+    for (const k of ['played','sum','best','streak','maxStreak','last']) this.d[k] = this.d[k] || 0;
+    if (this.d.sound === undefined) this.d.sound = true; },
+  save() { try { localStorage.setItem(this.key, JSON.stringify(this.d)); } catch (e) {} }
+};
+
+/* ---------- sound (all synthesised, no files) ---------- */
+const Snd = {
+  ctx: null, lastTick: 0,
+  init() { if (!this.ctx) { try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+    if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); },
+  tone(f, dur, o = {}) {
+    if (!Store.d.sound || !this.ctx) return;
+    const t = this.ctx.currentTime + (o.at || 0), osc = this.ctx.createOscillator(), g = this.ctx.createGain();
+    osc.type = o.type || 'sine'; osc.frequency.setValueAtTime(f, t);
+    if (o.to) osc.frequency.exponentialRampToValueAtTime(o.to, t + dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(o.vol || 0.14, t + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    osc.connect(g).connect(this.ctx.destination); osc.start(t); osc.stop(t + dur + 0.02);
+  },
+  tick() { const n = performance.now(); if (n - this.lastTick < 45) return; this.lastTick = n; this.tone(1500, 0.025, { type: 'square', vol: 0.025 }); },
+  tap() { this.tone(520, 0.06, { type: 'triangle', vol: 0.09 }); },
+  thunk() { this.tone(150, 0.16, { to: 55, vol: 0.3 }); this.tone(2200, 0.03, { type: 'square', vol: 0.03 }); },
+  beep(hi) { this.tone(hi ? 1175 : 784, 0.11, { type: 'triangle', vol: 0.12 }); },
+  score(s) {
+    const base = 262 * Math.pow(2, clamp(s, 0, 100) / 100);             // one octave of range
+    if (s >= 90) [1, 1.26, 1.5, s >= 97 ? 2 : 0].forEach((m, i) => m && this.tone(base * m, 0.22, { type: 'triangle', at: 0.12 + i * 0.075, vol: 0.13 }));
+    else if (s >= 55) [1, 1.26].forEach((m, i) => this.tone(base * m, 0.2, { type: 'triangle', at: 0.12 + i * 0.09, vol: 0.12 }));
+    else this.tone(base, 0.34, { type: 'sawtooth', to: base * 0.7, at: 0.12, vol: 0.07 });
+  },
+  fanfare(t) { const n = t >= 90 ? 6 : t >= 75 ? 5 : t >= 55 ? 4 : 3; const sc = [392, 494, 587, 784, 988, 1175];
+    for (let i = 0; i < n; i++) this.tone(sc[i], i === n - 1 ? 0.5 : 0.16, { type: 'triangle', at: 0.25 + i * 0.11, vol: 0.13 }); }
+};
+const buzz = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} };
+
+/* ---------- pointer helper: drag anywhere, movement is relative ---------- */
+function dragger(svg, h) {
+  let last = null;
+  const P = e => { const r = svg.getBoundingClientRect(); return { x: (e.clientX - r.left) / r.width * 320, y: (e.clientY - r.top) / r.height * 320 }; };
+  svg.addEventListener('pointerdown', e => { if (svg.dataset.locked) return; e.preventDefault(); try { svg.setPointerCapture(e.pointerId); } catch (_) {} last = P(e); h.down && h.down(last); });
+  svg.addEventListener('pointermove', e => { if (!last || svg.dataset.locked) return; const p = P(e); h.move && h.move(p, { x: p.x - last.x, y: p.y - last.y }, last); last = p; });
+  const up = () => { last = null; };
+  svg.addEventListener('pointerup', up); svg.addEventListener('pointercancel', up);
+}
+function label(svg, x, y, txt, fill, size = 18, anchor = 'middle') {
+  const t = S('text', { x, y, fill, 'font-size': size, 'text-anchor': anchor, class: 'pop', 'paint-order': 'stroke', stroke: '#FFFEF8', 'stroke-width': 5, 'stroke-linejoin': 'round' }, svg);
+  t.textContent = txt; return t;
+}
+
+/* ---------- the eight challenges ----------
+   Each one: gen(rng) -> params, prompt(params), mount(api, params) -> instance, score(params, answer) -> {err, off}
+   A round's score is 100 * exp(-err / tau): err 0 is a perfect 100, err = tau is about 37. */
+const CH = {};
+
+const FRACS = [
+  { v: 1/2, t: 'exactly in half' }, { v: 1/2, t: 'exactly in half' },
+  { v: 1/3, t: 'one third of the way from the dot' }, { v: 2/3, t: 'two thirds of the way from the dot' },
+  { v: 1/4, t: 'a quarter of the way from the dot' }, { v: 3/4, t: 'three quarters of the way from the dot' },
+  { v: 1/5, t: 'one fifth of the way from the dot' }, { v: 0.4, t: '40% of the way from the dot' },
+  { v: 0.6, t: '60% of the way from the dot' }, { v: 0.9, t: '90% of the way from the dot' }
+];
+CH.split = {
+  name: 'Split', icon: '✂️', tau: 12, hint: 'Tap the line, then drag anywhere to slide your cut',
+  gen(g) { const f = pick(g, FRACS); return { ang: rr(g, -35, 35), len: rr(g, 215, 272), f: f.v, ft: f.t, flip: g() < 0.5 }; },
+  prompt: p => `Cut the line ${p.ft}.`,
+  mount(api, p) {
+    const svg = api.svg, a = rad(p.ang), s = p.flip ? -1 : 1;
+    const ux = Math.cos(a) * s, uy = Math.sin(a) * s;
+    const A = { x: 160 - ux * p.len / 2, y: 160 - uy * p.len / 2 }, B = { x: 160 + ux * p.len / 2, y: 160 + uy * p.len / 2 };
+    S('line', { x1: A.x, y1: A.y, x2: B.x, y2: B.y, class: 'ink-s', 'stroke-width': 5 }, svg);
+    S('circle', { cx: A.x, cy: A.y, r: 9, fill: INK }, svg);
+    const tick = (t, cls, h = 22) => { const x = A.x + ux * p.len * t, y = A.y + uy * p.len * t; return { x1: x + uy * h, y1: y - ux * h, x2: x - uy * h, y2: y + ux * h, class: cls }; };
+    let t = null; const mark = S('line', { class: 'you-s', visibility: 'hidden' }, svg);
+    const draw = () => { const k = tick(t, 'you-s'); for (const n in k) mark.setAttribute(n, k[n]); mark.setAttribute('visibility', 'visible'); api.changed(); };
+    dragger(svg, {
+      down: q => { if (t === null) { t = clamp(((q.x - A.x) * ux + (q.y - A.y) * uy) / p.len, 0, 1); draw(); } },
+      move: (q, d) => { t = clamp(t + (d.x * ux + d.y * uy) / p.len, 0, 1); draw(); }
+    });
+    return {
+      ready: () => t !== null, answer: () => t,
+      nudge: (dx, dy) => { t = clamp((t === null ? 0.5 : t) + (dx * ux + dy * uy) * 0.002, 0, 1); draw(); },
+      reveal() {
+        const k = tick(p.f, 'truth-s pop', 30); S('line', k, svg);
+        const o = 44, x1 = A.x + ux * p.len * t - uy * o, y1 = A.y + uy * p.len * t + ux * o, x2 = A.x + ux * p.len * p.f - uy * o, y2 = A.y + uy * p.len * p.f + ux * o;
+        S('line', { x1, y1, x2, y2, class: 'dim pop' }, svg);
+        [[x1, y1], [x2, y2]].forEach(([x, y]) => S('line', { x1: x + uy * 6, y1: y - ux * 6, x2: x - uy * 6, y2: y + ux * 6, class: 'dim pop' }, svg));
+      }
+    };
+  },
+  score(p, t) { const e = Math.abs(t - p.f) * 100; return { err: e, off: e < 0.05 ? 'Dead on the mark' : `${fmt(e)}% of the line ${t > p.f ? 'too far' : 'short'}` }; }
+};
+
+CH.count = {
+  name: 'Count', icon: '👀', tau: 60, hint: 'They only show for a second and a half',
+  gen(g) {
+    const n = ri(g, 14, 72), pts = [];
+    let guard = 0;
+    while (pts.length < n && guard++ < 20000) {
+      const r = rr(g, 5, 8.5), x = rr(g, 26, 294), y = rr(g, 26, 294);
+      if (pts.every(q => Math.hypot(q.x - x, q.y - y) > q.r + r + 3)) pts.push({ x, y, r });
+    }
+    return { n: pts.length, pts };
+  },
+  prompt: () => 'How many dots flash up?',
+  mount(api, p) {
+    const svg = api.svg; let phase = 'ready', val = null, timer = null;
+    const msg = label(svg, 160, 150, 'Ready?', INK, 44); const sub = label(svg, 160, 182, 'Eyes on the square', INK, 20);
+    const dots = S('g', { visibility: 'hidden' }, svg);
+    p.pts.forEach(q => S('circle', { cx: q.x, cy: q.y, r: q.r, fill: INK }, dots));
+    const big = S('text', { x: 160, y: 196, 'font-size': 120, 'text-anchor': 'middle', fill: YOU, visibility: 'hidden' }, svg);
+    api.btn('Show the dots', true);
+    const set = v => { val = clamp(Math.round(v), 1, 120); big.textContent = val; slider.value = val; api.changed(); };
+    let slider;
+    return {
+      ready: () => phase === 'input' && val !== null,
+      primary() {
+        if (phase === 'ready') {
+          phase = 'flash'; msg.remove(); sub.remove(); dots.setAttribute('visibility', 'visible'); Snd.beep(true); api.btn('Watch', false);
+          timer = setTimeout(() => {
+            dots.setAttribute('visibility', 'hidden'); phase = 'input'; Snd.beep(false);
+            big.textContent = '?'; big.setAttribute('visibility', 'visible');
+            api.controls.innerHTML = '<div class="counter"><button type="button" aria-label="One fewer">−</button><input type="range" min="1" max="120" value="60" aria-label="Your count"><button type="button" aria-label="One more">+</button></div>';
+            const [minus, plus] = api.controls.querySelectorAll('button'); slider = api.controls.querySelector('input');
+            slider.addEventListener('input', () => set(+slider.value));
+            minus.addEventListener('click', () => set((val === null ? +slider.value : val) - 1));
+            plus.addEventListener('click', () => set((val === null ? +slider.value : val) + 1));
+            api.hint('Slide to your best guess, then fine-tune with − and +'); api.btn('Lock it in', false);
+          }, 1500);
+          return undefined;
+        }
+        return phase === 'input' && val !== null ? val : undefined;
+      },
+      answer: () => val,
+      nudge: dx => { if (phase === 'input') set((val === null ? 60 : val) + Math.sign(dx)); },
+      reveal() { api.controls.innerHTML = ''; big.setAttribute('visibility', 'hidden'); dots.setAttribute('visibility', 'visible'); dots.setAttribute('class', 'pop');
+        label(svg, 160, 306, `${p.n} dots`, TRUTH, 26); },
+      destroy() { clearTimeout(timer); }
+    };
+  },
+  score(p, v) { const e = Math.abs(v - p.n) / p.n * 100; return { err: e, off: v === p.n ? `Exactly ${p.n}. Spot on` : `There were ${p.n}. You said ${v}` }; }
+};
+
+CH.time = {
+  name: 'Time', icon: '⏱️', tau: 25, hint: 'The hand hides after one second. Keep counting in your head',
+  gen(g) { return { T: pick(g, [3, 4, 5, 6, 7, 8]) }; },
+  prompt: p => `Stop the watch at exactly ${p.T}.00 seconds.`,
+  mount(api, p) {
+    const svg = api.svg, cx = 160, cy = 142, R = 104; let phase = 'ready', t0 = 0, raf = 0, to = 0, stopped = null;
+    S('circle', { cx: cx, cy: cy, r: R, class: 'ink-s', 'stroke-width': 5 }, svg);
+    for (let i = 0; i < 50; i++) { const a = rad(i * 7.2 - 90), big = i % 5 === 0, r1 = R - (big ? 16 : 8);
+      S('line', { x1: cx + Math.cos(a) * r1, y1: cy + Math.sin(a) * r1, x2: cx + Math.cos(a) * (R - 2), y2: cy + Math.sin(a) * (R - 2), stroke: INK, 'stroke-width': big ? 3 : 1.5 }, svg);
+      if (big) { const tx = S('text', { x: cx + Math.cos(a) * (R - 30), y: cy + Math.sin(a) * (R - 30) + 6, 'font-size': 18, 'text-anchor': 'middle', fill: INK }, svg); tx.textContent = i / 5; } }
+    const pos = (sec, r) => { const a = rad(sec * 36 - 90); return [cx + Math.cos(a) * r, cy + Math.sin(a) * r]; };
+    const [mx, my] = pos(p.T, R + 12); S('circle', { cx: mx, cy: my, r: 6, fill: TRUTH }, svg);
+    const hand = S('line', { x1: cx, y1: cy, x2: cx, y2: cy - R + 22, class: 'you-s', 'stroke-width': 5 }, svg);
+    hand.style.transition = 'opacity .35s';
+    S('circle', { cx: cx, cy: cy, r: 8, fill: INK }, svg);
+    const read = S('text', { x: cx, y: 302, 'font-size': 38, 'text-anchor': 'middle', fill: INK }, svg); read.textContent = '0.00';
+    const setHand = sec => { const [x, y] = pos(sec, R - 22); hand.setAttribute('x2', x); hand.setAttribute('y2', y); };
+    const loop = () => { const s = (performance.now() - t0) / 1000;
+      if (s < 1) { setHand(s); read.textContent = s.toFixed(2); raf = requestAnimationFrame(loop); }
+      else { hand.style.opacity = 0; read.textContent = '?.??'; } };
+    api.btn('Start the watch', true);
+    const inst = {
+      fast: false, ready: () => phase === 'run',
+      primary() {
+        if (phase === 'ready') { phase = 'run'; t0 = performance.now(); Snd.beep(true); inst.fast = true; api.btn('Stop', true); raf = requestAnimationFrame(loop);
+          to = setTimeout(() => { stopped = p.T * 3; api.lockNow(stopped); }, p.T * 3000); return undefined; }
+        if (phase === 'run') { const s = (performance.now() - t0) / 1000; if (s < 0.3) return undefined; stopped = s; return s; }
+        return undefined;
+      },
+      answer: () => stopped,
+      reveal() { phase = 'done'; inst.fast = false; cancelAnimationFrame(raf); clearTimeout(to); hand.style.opacity = 1; setHand(stopped % 10); read.textContent = stopped.toFixed(2) + ' s'; read.setAttribute('fill', YOU);
+        const [x, y] = pos(p.T, R - 22); S('line', { x1: cx, y1: cy, x2: x, y2: y, class: 'truth-s pop', 'stroke-width': 3 }, svg); },
+      destroy() { cancelAnimationFrame(raf); clearTimeout(to); }
+    };
+    return inst;
+  },
+  score(p, t) { const d = t - p.T, e = Math.abs(d) / p.T * 100; return { err: e, off: Math.abs(d) < 0.005 ? 'To the hundredth. Unreal' : `You stopped at ${t.toFixed(2)} s, ${Math.abs(d).toFixed(2)} ${d > 0 ? 'late' : 'early'}` }; }
+};
+
+CH.angle = {
+  name: 'Angle', icon: '📐', tau: 16, hint: 'Tap to place the arm, then drag anywhere to swing it',
+  gen(g) { let A; do { A = ri(g, 12, 168); } while (A % 45 === 0); return { A }; },
+  prompt: p => `Open the angle to exactly ${p.A}°.`,
+  mount(api, p) {
+    const svg = api.svg, V = { x: 160, y: 238 }, R = 128; let a = null;
+    S('line', { x1: V.x, y1: V.y, x2: V.x + R, y2: V.y, class: 'ink-s', 'stroke-width': 5 }, svg);
+    const arm = S('line', { x1: V.x, y1: V.y, class: 'you-s', 'stroke-width': 5, visibility: 'hidden' }, svg);
+    const arc = S('path', { class: 'you-s', 'stroke-width': 2, visibility: 'hidden' }, svg);
+    S('circle', { cx: V.x, cy: V.y, r: 7, fill: INK }, svg);
+    const end = (deg, r) => [V.x + Math.cos(rad(deg)) * r, V.y - Math.sin(rad(deg)) * r];
+    const ang = q => { const d = Math.atan2(V.y - q.y, q.x - V.x) * 180 / Math.PI; return d < -90 ? 180 : d < 0 ? 0 : d; };
+    const raw = q => Math.atan2(V.y - q.y, q.x - V.x) * 180 / Math.PI;
+    const draw = () => { const [x, y] = end(a, R); arm.setAttribute('x2', x); arm.setAttribute('y2', y); arm.setAttribute('visibility', 'visible');
+      const [ax, ay] = end(a, 34); arc.setAttribute('d', `M${V.x + 34},${V.y} A34,34 0 0 0 ${ax},${ay}`); arc.setAttribute('visibility', 'visible'); api.changed(); };
+    dragger(svg, {
+      down: q => { if (a === null) { a = ang(q); draw(); } },
+      move: (q, d, last) => { if (Math.hypot(q.x - V.x, q.y - V.y) < 16) return; let dl = raw(q) - raw(last); if (dl > 180) dl -= 360; if (dl < -180) dl += 360; a = clamp(a + dl, 0, 180); draw(); }
+    });
+    return {
+      ready: () => a !== null, answer: () => a,
+      nudge: (dx, dy) => { a = clamp((a === null ? 90 : a) - dx * 0.25 + -dy * 0.25, 0, 180); draw(); },
+      reveal() { const [x, y] = end(p.A, R); S('line', { x1: V.x, y1: V.y, x2: x, y2: y, class: 'truth-s pop', 'stroke-width': 3 }, svg);
+        const [lx, ly] = end(p.A, R + 18); label(svg, clamp(lx, 30, 290), clamp(ly, 24, 300), `${p.A}°`, TRUTH, 20);
+        const [ux, uy] = end((a + 0) / 2, 62); label(svg, ux, uy + 6, `${Math.round(a)}°`, YOU, 20); }
+    };
+  },
+  score(p, a) { const d = a - p.A, e = Math.abs(d); return { err: e, off: e < 0.25 ? 'Bang on the degree' : `${fmt(e)}° too ${d > 0 ? 'wide' : 'narrow'}` }; }
+};
+
+const VESSELS = [
+  u => 1 - 0.74 * u,                                 // flask
+  u => 0.1 + 0.9 * u,                                // cone
+  u => Math.sqrt(Math.max(0.02, 1 - (1 - u) * (1 - u))), // bowl
+  u => 0.26 + 0.74 * Math.abs(2 * u - 1),            // hourglass
+  u => 1 - 0.76 * Math.abs(2 * u - 1),               // lantern
+  u => 0.62 + 0.36 * Math.sin(u * 5.2 + 0.4)         // vase
+];
+function vesselMath(w) { const N = 400, cum = [0]; for (let i = 1; i <= N; i++) cum.push(cum[i - 1] + (w((i - 1) / N) + w(i / N)) / 2);
+  const F = u => { const x = clamp(u, 0, 1) * N, i = Math.floor(x), f = x - i; return (cum[i] + (i < N ? (cum[i + 1] - cum[i]) * f : 0)) / cum[N]; };
+  const inv = t => { let lo = 0, hi = 1; for (let k = 0; k < 40; k++) { const m = (lo + hi) / 2; F(m) < t ? lo = m : hi = m; } return (lo + hi) / 2; };
+  return { F, inv }; }
+CH.pour = {
+  name: 'Pour', icon: '🥛', tau: 20, hint: 'Drag up and down anywhere to pour',
+  gen(g) { return { shape: ri(g, 0, VESSELS.length - 1), pct: ri(g, 3, 17) * 5 }; },
+  prompt: p => `Fill it until it's exactly ${p.pct}% full.`,
+  mount(api, p) {
+    const svg = api.svg, w = VESSELS[p.shape], { F, inv } = vesselMath(w), yb = 290, H = 250, hw = 100;
+    let u = 0.03, touched = false; const L = [], Rr = [];
+    for (let i = 0; i <= 50; i++) { const t = i / 50, y = yb - t * H; L.push([160 - hw * w(t), y]); Rr.push([160 + hw * w(t), y]); }
+    const d = 'M' + L.map(q => q.join(',')).join('L') + 'L' + Rr.reverse().map(q => q.join(',')).join('L') + 'Z';
+    const id = 'clip' + Math.random().toString(36).slice(2); const cp = S('clipPath', { id }, S('defs', {}, svg)); const rect = S('rect', { x: 0, width: 320 }, cp);
+    S('path', { d, fill: YOU, 'clip-path': `url(#${id})` }, svg);
+    S('path', { d, class: 'ink-s', 'stroke-width': 5 }, svg);
+    const draw = () => { const y = yb - u * H; rect.setAttribute('y', y); rect.setAttribute('height', 320 - y); };
+    draw();
+    dragger(svg, { move: (q, dl) => { u = clamp(u - dl.y / H, 0, 1); touched = true; draw(); api.changed(); } });
+    return {
+      ready: () => touched, answer: () => F(u) * 100,
+      nudge: (dx, dy) => { u = clamp(u - dy * 0.004 + dx * 0.004, 0, 1); touched = true; draw(); api.changed(); },
+      reveal() { const y = yb - inv(p.pct / 100) * H; S('line', { x1: 24, y1: y, x2: 296, y2: y, class: 'truth-s pop', 'stroke-width': 3, 'stroke-dasharray': '7 7' }, svg);
+        label(svg, 292, y - 8, `${p.pct}%`, TRUTH, 20, 'end'); }
+    };
+  },
+  score(p, v) { const d = v - p.pct, e = Math.abs(d); return { err: e, off: e < 0.3 ? 'Poured to the drop' : `You filled it to ${fmt(v)}%, ${fmt(e)} ${d > 0 ? 'over' : 'under'}` }; }
+};
+
+function centroid(pts) { let a = 0, cx = 0, cy = 0; for (let i = 0; i < pts.length; i++) { const p = pts[i], q = pts[(i + 1) % pts.length], k = p[0] * q[1] - q[0] * p[1]; a += k; cx += (p[0] + q[0]) * k; cy += (p[1] + q[1]) * k; }
+  a /= 2; return { x: cx / (6 * a), y: cy / (6 * a), area: Math.abs(a) }; }
+CH.balance = {
+  name: 'Balance', icon: '⚖️', tau: 16, hint: 'Tap to drop a pin, then drag anywhere to nudge it',
+  gen(g) {
+    const k = ri(g, 3, 5), base = rr(g, 0, 360); let pts = [];
+    for (let i = 0; i < k; i++) { const a = rad(base + (i + rr(g, -0.28, 0.28)) * 360 / k), r = rr(g, 58, 128); pts.push([Math.cos(a) * r, Math.sin(a) * r]); }
+    const c = centroid(pts), tx = 160 + rr(g, -20, 20), ty = 160 + rr(g, -20, 20);
+    pts = pts.map(q => [q[0] - c.x, q[1] - c.y]);
+    const m = Math.max(...pts.map(q => Math.max(Math.abs(q[0]) / (Math.min(tx, 320 - tx) - 14), Math.abs(q[1]) / (Math.min(ty, 320 - ty) - 14))));
+    const sc = m > 1 ? 1 / m : 1;
+    return { pts: pts.map(q => [tx + q[0] * sc, ty + q[1] * sc]) };
+  },
+  prompt: () => 'Pin the spot where this shape would balance.',
+  mount(api, p) {
+    const svg = api.svg, C = centroid(p.pts); let pos = null;
+    S('polygon', { points: p.pts.map(q => q.join(',')).join(' '), fill: '#FFD60A', class: 'ink-s', 'stroke-width': 5 }, svg).style.fill = '#FFD60A';
+    const pin = S('g', { visibility: 'hidden' }, svg);
+    S('path', { d: 'M-14,0H-5M5,0H14M0,-14V-5M0,5V14', class: 'you-s', 'stroke-width': 3 }, pin); S('circle', { r: 3.5, fill: YOU }, pin);
+    const draw = () => { pin.setAttribute('transform', `translate(${pos.x},${pos.y})`); pin.setAttribute('visibility', 'visible'); api.changed(); };
+    dragger(svg, { down: q => { if (!pos) { pos = { x: q.x, y: q.y }; draw(); } }, move: (q, d) => { pos.x = clamp(pos.x + d.x, 4, 316); pos.y = clamp(pos.y + d.y, 4, 316); draw(); } });
+    return {
+      ready: () => !!pos, answer: () => pos,
+      nudge: (dx, dy) => { pos = pos || { x: 160, y: 160 }; pos.x += dx * 0.5; pos.y += dy * 0.5; draw(); },
+      reveal() { S('line', { x1: pos.x, y1: pos.y, x2: C.x, y2: C.y, class: 'dim pop' }, svg); S('circle', { cx: C.x, cy: C.y, r: 6, fill: TRUTH, class: 'pop' }, svg); }
+    };
+  },
+  score(p, a) { const C = centroid(p.pts), e = Math.hypot(a.x - C.x, a.y - C.y) / Math.sqrt(C.area) * 100; return { err: e, off: e < 0.4 ? 'Perfectly balanced' : `${fmt(e)}% of the shape's width off` }; }
+};
+
+CH.match = {
+  name: 'Match', icon: '📏', tau: 20, hint: 'Drag anywhere to stretch the blue line',
+  gen(g) { return { len: rr(g, 78, 186), ra: rr(g, -13, 13), cx: rr(g, 135, 185), ax: rr(g, 115, 205), da: rr(g, 63, 117) }; },
+  prompt: () => 'Stretch the blue line to match the black one.',
+  mount(api, p) {
+    const svg = api.svg, a = rad(p.ra), rx = Math.cos(a) * p.len / 2, ry = Math.sin(a) * p.len / 2;
+    S('line', { x1: p.cx - rx, y1: 58 - ry, x2: p.cx + rx, y2: 58 + ry, class: 'ink-s', 'stroke-width': 5 }, svg);
+    const ux = Math.cos(rad(p.da)), uy = -Math.sin(rad(p.da)), A = { x: p.ax, y: 300 };
+    let L = 16, touched = false; const ln = S('line', { x1: A.x, y1: A.y, class: 'you-s', 'stroke-width': 5 }, svg);
+    S('circle', { cx: A.x, cy: A.y, r: 6, fill: YOU }, svg);
+    const draw = () => { ln.setAttribute('x2', A.x + ux * L); ln.setAttribute('y2', A.y + uy * L); };
+    draw();
+    dragger(svg, { move: (q, d) => { L = clamp(L + d.x * ux + d.y * uy, 4, 200); touched = true; draw(); api.changed(); } });
+    return {
+      ready: () => touched, answer: () => L,
+      nudge: (dx, dy) => { L = clamp(L + (dx - dy) * 0.4, 4, 200); touched = true; draw(); api.changed(); },
+      reveal() { const o = 12; S('line', { x1: A.x - uy * o, y1: A.y + ux * o, x2: A.x - uy * o + ux * p.len, y2: A.y + ux * o + uy * p.len, class: 'truth-s pop', 'stroke-width': 3 }, svg); }
+    };
+  },
+  score(p, L) { const d = L - p.len, e = Math.abs(d) / p.len * 100; return { err: e, off: e < 0.4 ? 'A perfect match' : `${fmt(e)}% too ${d > 0 ? 'long' : 'short'}` }; }
+};
+
+CH.parallel = {
+  name: 'Line up', icon: '🛤️', tau: 6, hint: 'Drag in a circle anywhere to spin the blue line',
+  gen(g) { let t; do { t = rr(g, -78, 78); } while ([0, 45, -45, 90, -90].some(k => Math.abs(t - k) < 6)); return { t, off: (g() < 0.5 ? -1 : 1) * rr(g, 24, 58) }; },
+  prompt: () => 'Spin the blue line parallel to the black one.',
+  mount(api, p) {
+    const svg = api.svg, rc = { x: 104, y: 104 }, c = { x: 220, y: 220 }; let a = p.t + p.off, touched = false;
+    const seg = (ctr, deg, len, attrs) => { const x = Math.cos(rad(deg)) * len / 2, y = Math.sin(rad(deg)) * len / 2; return Object.assign({ x1: ctr.x - x, y1: ctr.y - y, x2: ctr.x + x, y2: ctr.y + y }, attrs); };
+    S('line', seg(rc, p.t, 140, { class: 'ink-s', 'stroke-width': 5 }), svg);
+    const ln = S('line', { class: 'you-s', 'stroke-width': 5 }, svg);
+    const draw = () => { const k = seg(c, a, 108, {}); for (const n in k) ln.setAttribute(n, k[n]); };
+    draw();
+    const raw = q => Math.atan2(q.y - c.y, q.x - c.x) * 180 / Math.PI;
+    dragger(svg, { move: (q, d, last) => { if (Math.hypot(q.x - c.x, q.y - c.y) < 16) return; let dl = raw(q) - raw(last); if (dl > 180) dl -= 360; if (dl < -180) dl += 360; a += dl; touched = true; draw(); api.changed(); } });
+    return {
+      ready: () => touched, answer: () => a,
+      nudge: (dx, dy) => { a += (dx + dy) * 0.2; touched = true; draw(); api.changed(); },
+      reveal() { S('line', seg(c, p.t, 150, { class: 'truth-s pop', 'stroke-width': 2.5, 'stroke-dasharray': '7 6' }), svg); }
+    };
+  },
+  score(p, a) { let d = Math.abs(a - p.t) % 180; d = Math.min(d, 180 - d); return { err: d, off: d < 0.15 ? 'Perfectly parallel' : `${fmt(d)}° out of line` }; }
+};
+
+const IDS = Object.keys(CH);
+const toScore = (id, err) => Math.round(1000 * Math.exp(-err / CH[id].tau)) / 10;
+const grade = s => s >= 97 ? 'top' : s >= 90 ? 'good' : s >= 75 ? 'ok' : s >= 55 ? 'meh' : 'bad';
+const SQUARE = { top: '🎯', good: '🟩', ok: '🟨', meh: '🟧', bad: '🟥' };
+const verdict = s => s >= 99 ? 'Dead on' : s >= 95 ? 'A smidge off' : s >= 88 ? 'So close' : s >= 75 ? 'Near enough' : s >= 55 ? 'Ballpark' : s >= 30 ? 'Way off' : 'Not even close';
+
+function plan(seed) {
+  const g = mulberry32(seed), ids = IDS.slice();
+  for (let i = ids.length - 1; i > 0; i--) { const j = Math.floor(g() * (i + 1)); [ids[i], ids[j]] = [ids[j], ids[i]]; }
+  return ids.slice(0, 5).map((id, i) => ({ id, p: CH[id].gen(mulberry32(seed * 31 + i * 977 + 5)) }));
+}
+const dailyPlan = day => plan(day * 7919 + 20261114);
+
+/* ---------- the curve: baseline model blended with live anonymous counts ---------- */
+const BUCKETS = 20;
+const Curve = {
+  base: null, live: null, liveN: 0,
+  baseline() {            // a modelled crowd: thousands of simulated players of mixed ability
+    if (this.base) return this.base;
+    const g = mulberry32(8675309), gauss = () => { let u = 0, v = 0; while (!u) u = g(); v = g(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+    const pmf = new Array(BUCKETS).fill(0), N = 8000;
+    for (let i = 0; i < N; i++) { const skill = Math.exp(0.5 * gauss()); let sum = 0;
+      for (let j = 0; j < 5; j++) { let e = Math.abs(gauss()) * 0.42 * skill; if (g() < 0.07) e *= 3; sum += 100 * Math.exp(-e); }
+      pmf[Math.min(BUCKETS - 1, Math.floor(sum / 5 / (100 / BUCKETS)))]++; }
+    return this.base = pmf.map(v => v / N);
+  },
+  pmf() { const b = this.baseline(); if (!this.live || !this.liveN) return b; const K = CONFIG.priorWeight; return b.map((v, i) => (this.live[i] + K * v) / (this.liveN + K)); },
+  percentile(score) { const p = this.pmf(), w = 100 / BUCKETS, i = Math.min(BUCKETS - 1, Math.floor(score / w)); let s = 0; for (let k = 0; k < i; k++) s += p[k];
+    return clamp(Math.round((s + p[i] * (score - i * w) / w) * 100), 1, 99); },
+  key: (day, b) => `d${String(day).padStart(4, '0')}-b${String(b).padStart(2, '0')}`,
+  async req(path) { const ac = new AbortController(), t = setTimeout(() => ac.abort(), 6000);
+    try { const r = await fetch(`${CONFIG.liveBase}/${path}`, { signal: ac.signal, cache: 'no-store' }); if (r.status === 404) return 0; if (!r.ok) return null; const j = await r.json(); return typeof j.value === 'number' ? j.value : null; }
+    catch (e) { return null; } finally { clearTimeout(t); } },
+  async submit(day, score) { if (!CONFIG.live) return; await this.req(`hit/${CONFIG.liveNS}/${this.key(day, Math.min(BUCKETS - 1, Math.floor(score / (100 / BUCKETS))))}`); },
+  async fetch(day) { if (!CONFIG.live) return false;
+    const vals = await Promise.all(Array.from({ length: BUCKETS }, (_, b) => this.req(`get/${CONFIG.liveNS}/${this.key(day, b)}`)));
+    if (vals.every(v => v === null)) return false;
+    this.live = vals.map(v => v || 0); this.liveN = this.live.reduce((a, b) => a + b, 0); return true; }
+};
+
+/* ---------- screens ---------- */
+const show = id => { document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id)); window.scrollTo(0, 0); };
+let toastT; const toast = m => { const t = $('#toast'); t.textContent = m; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 2200); };
+const sheet = (id, on) => $(id).classList.toggle('on', on);
+const params = new URLSearchParams(location.search);
+const friend = params.get('vs') ? { score: parseFloat(params.get('vs')), day: parseInt(params.get('d'), 10) } : null;
+
+const Game = { mode: 'daily', day: 1, plan: [], idx: 0, scores: [], offs: [], inst: null, phase: 'play' };
+const TODAY = () => dayNumber();
+
+function renderHome() {
+  const day = TODAY(), rec = Store.d.days[day], pl = dailyPlan(day), done = rec && rec.done, n = rec ? rec.s.length : 0;
+  $('#hNum').textContent = `Smidge #${day}`;
+  $('#hDate').textContent = new Date().toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
+  $('#hFive').innerHTML = pl.map((r, i) => `<li class="${i < n ? 'done' : ''}">${CH[r.id].name}</li>`).join('');
+  $('#bPlay').textContent = done ? "See today's result" : n ? 'Carry on' : "Play today's five";
+  $('#bPractice').hidden = !done;
+  const alive = Store.d.last >= day - 1 ? Store.d.streak : 0;
+  $('#hStreak').textContent = alive > 1 ? `${alive}-day streak` : alive === 1 ? 'Day 1 of your streak' : '';
+  const f = $('#friend');
+  if (friend && isFinite(friend.score)) { f.hidden = false;
+    f.innerHTML = friend.day === day ? `A friend scored <b>${friend.score.toFixed(1)}</b> on today's Smidge. Go and beat it.` : `A friend scored <b>${friend.score.toFixed(1)}</b> on an earlier Smidge. See what you get today.`; }
+  show('home'); if (typeof fitHero === 'function') fitHero();
+}
+
+function start(mode) {
+  Snd.init(); Game.mode = mode; Game.day = TODAY();
+  if (mode === 'daily') {
+    const rec = Store.d.days[Game.day];
+    if (rec && rec.done) return showResult(false);
+    Game.plan = dailyPlan(Game.day); Game.scores = rec ? rec.s.slice() : []; Game.offs = rec ? rec.o.slice() : [];
+  } else { Game.plan = plan(Math.floor(Math.random() * 1e9)); Game.scores = []; Game.offs = []; }
+  Game.idx = Game.scores.length; show('game'); loadRound();
+}
+
+function renderRounds() {
+  $('#rounds').innerHTML = Game.plan.map((r, i) => i < Game.scores.length ? `<div class="s-${grade(Game.scores[i])}">${Math.round(Game.scores[i])}</div>` : `<div class="${i === Game.idx ? 'now' : ''}">${i + 1}</div>`).join('');
+}
+
+function loadRound() {
+  if (Game.inst && Game.inst.destroy) Game.inst.destroy();
+  const r = Game.plan[Game.idx], ch = CH[r.id], wrap = $('#stagewrap');
+  Game.phase = 'play'; renderRounds();
+  $('#kind').textContent = `${Game.idx + 1} of 5: ${ch.name}`;
+  $('#prompt').textContent = ch.prompt(r.p);
+  wrap.innerHTML = ''; wrap.classList.remove('locked'); $('#controls').innerHTML = ''; const oldStamp = document.querySelector('.stamp'); if (oldStamp) oldStamp.remove();
+  const hint = $('#hint'); hint.classList.remove('res'); hint.textContent = ch.hint;
+  const svg = S('svg', { viewBox: '0 0 320 320', role: 'img', 'aria-label': ch.prompt(r.p) }, wrap);
+  const btn = $('#bMain'); btn.textContent = 'Lock it in'; btn.disabled = true;
+  const api = { svg, controls: $('#controls'), changed() { Snd.tick(); btn.disabled = !Game.inst.ready(); }, btn(label, on) { btn.textContent = label; btn.disabled = !on; }, hint(t) { hint.textContent = t; }, lockNow(a) { lock(a); } };
+  Game.inst = ch.mount(api, r.p);
+}
+
+function lock(answer) {
+  if (Game.phase !== 'play') return;
+  const r = Game.plan[Game.idx], ch = CH[r.id], res = ch.score(r.p, answer), s = toScore(r.id, res.err), wrap = $('#stagewrap');
+  Game.phase = 'revealed'; wrap.classList.add('locked'); wrap.firstChild.dataset.locked = '1';
+  Game.inst.reveal(res); Game.scores.push(s); Game.offs.push(res.off);
+  const st = document.createElement('div'); st.className = 'stamp'; st.innerHTML = `<b>${Math.round(s)}</b><span>${verdict(s)}</span>`; $('#under').prepend(st);
+  Snd.thunk(); Snd.score(s); buzz(s >= 90 ? [18, 40, 18] : 22);
+  const hint = $('#hint'); hint.classList.add('res'); hint.textContent = res.off;
+  if (Game.mode === 'daily') { Store.d.days[Game.day] = { s: Game.scores.slice(), o: Game.offs.slice(), ids: Game.plan.map(x => x.id), done: false }; Store.save(); }
+  renderRounds();
+  const btn = $('#bMain'); btn.disabled = false; btn.textContent = Game.idx === 4 ? 'See your score' : 'Next';
+}
+
+function next() {
+  Snd.tap();
+  if (Game.idx < 4) { Game.idx++; loadRound(); return; }
+  const total = Math.round(Game.scores.reduce((a, b) => a + b, 0) / 5 * 10) / 10;
+  if (Game.mode === 'daily') {
+    const d = Store.d, rec = d.days[Game.day]; rec.done = true; rec.t = total;
+    d.streak = d.last === Game.day - 1 ? d.streak + 1 : 1; d.maxStreak = Math.max(d.maxStreak, d.streak); d.last = Game.day;
+    d.played++; d.sum += total; d.best = Math.max(d.best, total);
+    Game.plan.forEach((r, i) => { const c = d.ch[r.id] = d.ch[r.id] || { n: 0, sum: 0 }; c.n++; c.sum += Game.scores[i]; });
+    const old = Object.keys(d.days).map(Number).sort((a, b) => a - b); while (old.length > 60) delete d.days[old.shift()];
+    Store.save();
+  }
+  showResult(true, total);
+}
+
+let countT;
+function showResult(fresh, practiceTotal) {
+  const daily = Game.mode === 'daily', day = Game.day, rec = daily ? Store.d.days[day] : null;
+  const scores = daily ? rec.s : Game.scores, offs = daily ? rec.o : Game.offs, ids = daily ? rec.ids : Game.plan.map(x => x.id), total = daily ? rec.t : practiceTotal;
+  Game.result = { daily, day, scores, ids, total };
+  $('#pNote').hidden = daily;
+  $('#rNum').textContent = daily ? `Smidge #${day}` : 'Practice';
+  $('#rStreak').textContent = daily && Store.d.streak > 1 ? `${Store.d.streak}-day streak` : '';
+  $('#rRows').innerHTML = ids.map((id, i) => `<li><span class="ic">${CH[id].icon}</span><span><span class="nm">${CH[id].name}</span><span class="of">${offs[i]}</span></span><span class="sc s-${grade(scores[i])}">${Math.round(scores[i])}</span></li>`).join('');
+  $('#bShare').hidden = !daily; $('#bPractice2').textContent = daily ? 'Play a practice round' : 'Play another practice round';
+  const vs = $('#rVs'); vs.hidden = true;
+  if (daily && friend && friend.day === day && isFinite(friend.score)) { vs.hidden = false;
+    vs.textContent = total > friend.score ? `You beat your friend's ${friend.score.toFixed(1)}.` : total === friend.score ? `Dead level with your friend on ${friend.score.toFixed(1)}.` : `Your friend's ${friend.score.toFixed(1)} still stands.`; }
+  show('result');
+  const el = $('#rTotal'), reduce = matchMedia('(prefers-reduced-motion:reduce)').matches;
+  if (fresh && !reduce) { const t0 = performance.now(), dur = 1100; const step = n => { const k = clamp((n - t0) / dur, 0, 1), e = 1 - Math.pow(1 - k, 3); el.textContent = (total * e).toFixed(1); if (k < 1) requestAnimationFrame(step); }; requestAnimationFrame(step); Snd.fanfare(total); }
+  else el.textContent = total.toFixed(1);
+  Curve.live = null; Curve.liveN = 0; drawCurve(total, daily, false);
+  if (daily) (async () => {
+    if (!rec.sent) { rec.sent = true; Store.save(); await Curve.submit(day, total); }
+    const ok = await Curve.fetch(day); if (Game.result && Game.result.day === day && Game.result.daily) drawCurve(total, true, ok);
+  })();
+  clearInterval(countT); const tickDown = () => { const n = new Date(), m = new Date(n.getFullYear(), n.getMonth(), n.getDate() + 1), s = Math.max(0, Math.floor((m - n) / 1000));
+    $('#rCount').textContent = [s / 3600, s / 60 % 60, s % 60].map(v => String(Math.floor(v)).padStart(2, '0')).join(':'); if (dayNumber() !== day && daily) { clearInterval(countT); renderHome(); } };
+  tickDown(); countT = setInterval(tickDown, 1000);
+  mountAds();
+}
+
+function drawCurve(total, daily, liveOk) {
+  const pmf = Curve.pmf(), pct = Curve.percentile(total), svg = $('#curve'), W = 320, H = 96, top = 14, max = Math.max(...pmf);
+  Game.result.pct = pct;
+  $('#rRank').innerHTML = `Sharper than <em>${pct}%</em> of players${daily ? ' today' : ''}` + (pct < 35 && daily ? '. Tomorrow is another go' : '');
+  const pts = [[0, H]].concat(pmf.map((v, i) => [(i + 0.5) / BUCKETS * W, H - v / max * (H - top)]), [[W, H]]);
+  let d = `M${pts[0]}`; for (let i = 0; i < pts.length - 1; i++) { const p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || p2;
+    d += `C${p1[0] + (p2[0] - p0[0]) / 6},${Math.min(H, p1[1] + (p2[1] - p0[1]) / 6)} ${p2[0] - (p3[0] - p1[0]) / 6},${Math.min(H, p2[1] - (p3[1] - p1[1]) / 6)} ${p2[0]},${p2[1]}`; }
+  const x = total / 100 * W;
+  svg.innerHTML = `<defs><clipPath id="beat"><rect x="0" y="0" width="${x}" height="${H}"/></clipPath></defs>
+    <path d="${d}Z" fill="#FFD60A"/><path d="${d}Z" fill="#161616" clip-path="url(#beat)"/><path d="${d}" fill="none" stroke="#161616" stroke-width="2.5"/>
+    <line x1="0" y1="${H}" x2="${W}" y2="${H}" stroke="#161616" stroke-width="2.5"/>
+    <line x1="${x}" y1="-2" x2="${x}" y2="${H}" stroke="#E4002B" stroke-width="3"/>
+    <text x="${clamp(x, 16, W - 16)}" y="-6" font-size="16" text-anchor="middle" fill="#E4002B">You</text>
+    ${[0, 25, 50, 75, 100].map(v => `<line x1="${v / 100 * W}" y1="${H}" x2="${v / 100 * W}" y2="${H + 6}" stroke="#161616" stroke-width="2"/><text x="${clamp(v / 100 * W, 6, W - 10)}" y="${H + 22}" font-size="13" text-anchor="middle" fill="#161616">${v}</text>`).join('')}`;
+  $('#curveNote').textContent = !daily ? "Measured against Smidge's baseline curve."
+    : liveOk && Curve.liveN >= 2 ? `${Curve.liveN.toLocaleString()} players so far today, blended with Smidge's baseline curve while the day fills up.`
+    : "Early curve: Smidge's baseline until more players finish today.";
+}
+
+function shareText() {
+  const r = Game.result, url = (CONFIG.siteUrl || location.origin + location.pathname) + `?vs=${r.total.toFixed(1)}&d=${r.day}`;
+  const row = r.ids.map((id, i) => CH[id].icon + SQUARE[grade(r.scores[i])]).join(' ');
+  const rank = r.pct >= 50 ? `Top ${100 - r.pct}% today` : `Sharper than ${r.pct}% today`;
+  return `Smidge #${r.day}  ${r.total.toFixed(1)}/100\n${row}\n${rank}${Store.d.streak > 1 ? `  🔥${Store.d.streak}` : ''}\nBeat me: ${url}`;
+}
+async function share() {
+  const text = shareText();
+  if (navigator.share && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) { try { await navigator.share({ text }); return; } catch (e) { if (e.name === 'AbortError') return; } }
+  try { await navigator.clipboard.writeText(text); toast('Copied. Paste it anywhere'); }
+  catch (e) { const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); toast('Copied. Paste it anywhere'); } catch (_) { toast('Could not copy on this browser'); } ta.remove(); }
+}
+
+function renderStats() {
+  const d = Store.d, alive = d.last >= TODAY() - 1 ? d.streak : 0;
+  $('#stGrid').innerHTML = [[d.played, 'played'], [alive, 'streak'], [d.played ? (d.sum / d.played).toFixed(1) : '0', 'average'], [d.best ? d.best.toFixed(1) : '0', 'best']].map(([v, l]) => `<div><b>${v}</b><span>${l}</span></div>`).join('');
+  const rows = IDS.filter(id => d.ch[id]).map(id => ({ id, avg: d.ch[id].sum / d.ch[id].n })).sort((a, b) => b.avg - a.avg);
+  $('#stSharp').textContent = rows.length > 1 ? `Your sharpest call is ${CH[rows[0].id].name}. ${CH[rows[rows.length - 1].id].name} needs work.` : 'Play a few days to see which calls you are sharpest at.';
+  $('#stBars').innerHTML = rows.map((r, i) => `<li class="${i === 0 ? 'best' : ''}"><span>${CH[r.id].name}</span><i style="width:${r.avg}%"></i><span>${Math.round(r.avg)}</span></li>`).join('');
+}
+
+function mountAds() {
+  if (!CONFIG.adsenseClient || !CONFIG.adsenseSlotResult) return;
+  const slot = $('#adResult'); if (slot.dataset.done) return; slot.dataset.done = '1'; slot.classList.add('on');
+  if (!document.getElementById('adsjs')) { const s = document.createElement('script'); s.id = 'adsjs'; s.async = true; s.crossOrigin = 'anonymous'; s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + CONFIG.adsenseClient; document.head.appendChild(s); }
+  slot.innerHTML = `<ins class="adsbygoogle" style="display:block" data-ad-client="${CONFIG.adsenseClient}" data-ad-slot="${CONFIG.adsenseSlotResult}" data-ad-format="auto" data-full-width-responsive="true"></ins>`;
+  (window.adsbygoogle = window.adsbygoogle || []).push({});
+}
+
+/* ---------- wiring ---------- */
+Store.load();
+const setSoundIcon = () => { $('#sWave').style.display = Store.d.sound ? '' : 'none'; };
+setSoundIcon();
+$('#bSound').onclick = () => { Store.d.sound = !Store.d.sound; Store.save(); setSoundIcon(); Snd.init(); Snd.tap(); };
+$('#bHelp').onclick = () => sheet('#shHelp', true);
+$('#bStats').onclick = () => { renderStats(); sheet('#shStats', true); };
+document.querySelectorAll('.sheet').forEach(s => s.addEventListener('click', e => { if (e.target === s || e.target.hasAttribute('data-close')) s.classList.remove('on'); }));
+$('#goHome').onclick = () => { if (Game.inst && Game.inst.destroy) Game.inst.destroy(); clearInterval(countT); renderHome(); };
+$('#bPlay').onclick = () => start('daily');
+$('#bPractice').onclick = $('#bPractice2').onclick = () => start('practice');
+$('#bShare').onclick = share;
+
+const main = $('#bMain'); let suppress = false;
+const press = () => { Snd.init(); if (Game.phase === 'revealed') return next(); const a = Game.inst.primary ? Game.inst.primary() : (Game.inst.ready() ? Game.inst.answer() : undefined); if (a !== undefined) lock(a); else Snd.tap(); };
+main.addEventListener('pointerdown', e => { if (Game.phase === 'play' && Game.inst && Game.inst.fast && !main.disabled) { e.preventDefault(); suppress = true; setTimeout(() => suppress = false, 500); press(); } });
+main.addEventListener('click', () => { if (suppress) { suppress = false; return; } press(); });
+document.addEventListener('keydown', e => {
+  if (!$('#game').classList.contains('on') || document.querySelector('.sheet.on')) return;
+  const k = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
+  if (k && Game.phase === 'play' && Game.inst.nudge && e.target.tagName !== 'INPUT') { e.preventDefault(); const m = e.shiftKey ? 8 : 1; Game.inst.nudge(k[0] * m, k[1] * m); }
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.tagName !== 'BUTTON' && !main.disabled) { e.preventDefault(); press(); }
+});
+document.addEventListener('visibilitychange', () => { if (!document.hidden && $('#home').classList.contains('on')) renderHome(); });
+
+// one small moment on load: the dot settles a smidge off centre
+(function () { const dot = $('#heroDot'); if (!dot || matchMedia('(prefers-reduced-motion:reduce)').matches) return;
+  const t0 = performance.now(); const step = n => { const k = clamp((n - t0) / 900, 0, 1), e = 1 - Math.pow(1 - k, 4); dot.setAttribute('cx', 96 - 37 * e); dot.setAttribute('cy', 14 + 30 * e); if (k < 1) requestAnimationFrame(step); }; requestAnimationFrame(step); })();
+
+function fitHero() { const h = document.querySelector('.hero'); if (!h) return; h.style.fontSize = '100px';
+  const nat = h.querySelector('svg').getBoundingClientRect().width + 12 + h.querySelector('h1').getBoundingClientRect().width;
+  if (nat > 0) h.style.fontSize = Math.min(128, Math.floor(100 * h.parentElement.clientWidth / nat * 0.985)) + 'px'; }
+addEventListener('resize', fitHero); if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitHero);
+
+if (params.has('debug')) window.__smidge = { CH, Game, Curve, Store, plan, dailyPlan, toScore, lock, start, shareText };
+renderHome(); fitHero();
+})();
+</script>
+</body>
+</html>
