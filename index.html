@@ -35,7 +35,7 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(-
 .app{min-height:100dvh;display:flex;flex-direction:column}
 
 /* the tape: ruler ticks run along the top edge of everything */
-.tape{height:52px;flex:none;display:flex;align-items:flex-start;justify-content:space-between;padding:8px 14px 0;
+.tape{height:calc(52px + env(safe-area-inset-top));flex:none;display:flex;align-items:flex-start;justify-content:space-between;padding:calc(8px + env(safe-area-inset-top)) 14px 0;
   background:
     repeating-linear-gradient(90deg,var(--ink) 0 2px,transparent 2px 50px) 0 100%/100% 18px no-repeat,
     repeating-linear-gradient(90deg,var(--ink) 0 1px,transparent 1px 10px) 0 100%/100% 9px no-repeat;
