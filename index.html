@@ -230,6 +230,30 @@ main{max-width:520px;padding-top:6px}
 .curve{border:4px solid #7B4A2D;border-radius:20px;box-shadow:0 6px 0 #6B3F22}
 .counter button{border-color:#7B4A2D;box-shadow:0 3px 0 #7B4A2D;border-radius:50%}
 @media (min-width:700px){main{max-width:560px}.stagewrap{max-width:min(100%,60dvh)}}
+
+/* ---- full-screen scenes ---- */
+.tape{position:relative;z-index:10}
+#game.on{position:fixed;inset:0;z-index:5;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;background:#F6E6C8}
+.sceneback,.stagewrap{position:absolute;inset:0;max-width:none;aspect-ratio:auto;margin:0;border:0;border-radius:0;box-shadow:none;background:none;overflow:hidden}
+.sceneback svg{display:block;width:100%;height:100%}
+.stagewrap.in{animation:sceneIn .45s ease-out}
+@keyframes sceneIn{0%{opacity:0;transform:scale(1.06)}}
+.sceneback.in{animation:backIn .5s ease-out}
+@keyframes backIn{0%{opacity:0}}
+.hud{position:relative;z-index:2;width:100%;max-width:520px;margin:0 auto;padding:0 14px;pointer-events:none}
+.hud-top{padding-top:calc(64px + env(safe-area-inset-top))}
+.hud-bot{padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+.hud .btn,.hud .controls,.hud .counter{pointer-events:auto}
+.rounds{margin:0 0 12px}
+.rounds div{width:40px;height:40px;font-size:18px}
+.card{margin:0 0 0;padding:10px 14px 11px;box-shadow:0 5px 0 rgba(107,63,34,.35)}
+.under{min-height:70px;margin:0 0 8px}
+.hint{background:rgba(255,251,242,.92);border:2.5px solid #7B4A2D;box-shadow:0 3px 0 rgba(107,63,34,.3);font-size:15px}
+.hint.res{background:rgba(255,251,242,.92);padding:7px 12px;font-size:17px}
+.controls{margin:0 0 10px;background:rgba(255,251,242,.92);border-radius:18px;padding:0 8px}
+.controls:empty{display:none}
+#game .btn{margin-top:0;box-shadow:0 5px 0 rgba(0,0,0,.35),0 10px 20px rgba(107,63,34,.3)}
+.steamy{animation:glow 2s ease-in-out infinite}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;transition-duration:.01s!important}}
 @media (min-width:700px){main{padding-top:26px}}
 </style>
@@ -293,12 +317,17 @@ main{max-width:520px;padding-top:6px}
     </section>
 
     <section class="screen" id="game">
-      <div class="rounds" id="rounds" aria-label="Round progress"></div>
-      <div class="card"><div class="kind" id="kind"></div><h2 class="prompt" id="prompt"></h2></div>
+      <div class="sceneback" id="sceneback"></div>
       <div class="stagewrap" id="stagewrap"></div>
-      <div class="controls" id="controls"></div>
-      <div class="under" id="under"><p class="hint" id="hint" aria-live="polite"></p></div>
-      <button class="btn" id="bMain">Lock it in</button>
+      <div class="hud hud-top">
+        <div class="rounds" id="rounds" aria-label="Round progress"></div>
+        <div class="card"><div class="kind" id="kind"></div><h2 class="prompt" id="prompt"></h2></div>
+      </div>
+      <div class="hud hud-bot">
+        <div class="under" id="under"><p class="hint" id="hint" aria-live="polite"></p></div>
+        <div class="controls" id="controls"></div>
+        <button class="btn" id="bMain">Lock it in</button>
+      </div>
     </section>
 
     <section class="screen" id="result">
@@ -428,12 +457,16 @@ const buzz = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (
 /* ---------- pointer helper: drag anywhere, movement is relative ---------- */
 function dragger(svg, h) {
   let last = null;
-  const P = e => { const r = svg.getBoundingClientRect(); return { x: (e.clientX - r.left) / r.width * 320, y: (e.clientY - r.top) / r.height * 320 }; };
+  const P = e => { const r = svg.getBoundingClientRect(), vb = svg.viewBox.baseVal; return { x: vb.x + (e.clientX - r.left) / r.width * vb.width, y: vb.y + (e.clientY - r.top) / r.height * vb.height }; };
   svg.addEventListener('pointerdown', e => { if (svg.dataset.locked) return; e.preventDefault(); try { svg.setPointerCapture(e.pointerId); } catch (_) {} last = P(e); h.down && h.down(last); });
   svg.addEventListener('pointermove', e => { if (!last || svg.dataset.locked) return; const p = P(e); h.move && h.move(p, { x: p.x - last.x, y: p.y - last.y }, last); last = p; });
   const up = () => { if (last && h.up) h.up(); last = null; };
   svg.addEventListener('pointerup', up); svg.addEventListener('pointercancel', up);
 }
+function fitScene() { const g = $('#game'); if (!g.classList.contains('on')) return; const R = g.getBoundingClientRect(), top = document.querySelector('.card').getBoundingClientRect().bottom - R.top + 10, bot = R.bottom - $('#under').getBoundingClientRect().top + 6;
+  const free = Math.max(160, R.height - top - bot), k = Math.min(R.width / 320, free / 332), vb = `${160 - R.width / k / 2} ${160 - (top + free / 2) / k} ${R.width / k} ${R.height / k}`;
+  document.querySelectorAll('#sceneback svg, #stagewrap svg').forEach(e => e.setAttribute('viewBox', vb)); }
+addEventListener('resize', fitScene);
 function burst(el, n) { if (matchMedia('(prefers-reduced-motion:reduce)').matches || !el.animate) return; const r = el.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2, cols = ['#D8342B', '#FFD873', '#5F9482', '#F28FA6', '#FFFBF2', '#E3A858'];
   for (let i = 0; i < n; i++) { const b = document.createElement('i'); b.className = 'bit'; b.style.background = cols[i % cols.length]; b.style.left = cx + 'px'; b.style.top = cy + 'px'; document.body.appendChild(b);
     const a = Math.random() * 6.283, d = 60 + Math.random() * 120; b.animate([{ transform: 'translate(0,0) rotate(0)', opacity: 1 }, { transform: `translate(${Math.cos(a) * d}px,${Math.sin(a) * d - 40}px) rotate(${Math.random() * 540}deg)`, opacity: 1, offset: .7 }, { transform: `translate(${Math.cos(a) * d * 1.1}px,${Math.sin(a) * d + 60}px) rotate(${Math.random() * 720}deg)`, opacity: 0 }], { duration: 900 + Math.random() * 500, easing: 'cubic-bezier(.2,.7,.3,1)' }).onfinish = () => b.remove(); } }
@@ -539,9 +572,9 @@ CH.dial = {
   prompt: p => `Turn the oven dial to exactly ${p.deg}°.`,
   mount(api, p) {
     const svg = api.svg; let a = 0, ok = false;
-    api.bg('steel'); P(svg, 'M36,236h248a16,16 0 0 1 16,16v80h-280v-80a16,16 0 0 1 16,-16z', '#3A2418'); const heat = S('path', { d: 'M40,244h240a10,10 0 0 1 10,10v70h-260v-70a10,10 0 0 1 10,-10z', fill: '#FF9A2E', opacity: .2 }, svg);
-    P(svg, 'M96,320q0,-52 64,-52q64,0 64,52z', '#C98A44'); S('path', { d: 'M130,284l10,10M154,278l10,10M178,284l8,10', stroke: '#8A5A2C', 'stroke-width': 4, 'stroke-linecap': 'round' }, svg); shine(svg, 'M52,256l30,-10', 5, .25);
-    S('path', { d: 'M70,226h180', stroke: OUT, 'stroke-width': 13, 'stroke-linecap': 'round' }, svg); S('path', { d: 'M70,226h180', stroke: '#D9DEE3', 'stroke-width': 6, 'stroke-linecap': 'round' }, svg);
+    api.bg('steel'); const heat = S('path', { d: 'M28,266h264a8,8 0 0 1 8,8v236h-280v-236a8,8 0 0 1 8,-8z', fill: '#FF9A2E', opacity: .2 }, svg);
+    P(svg, 'M92,398q0,-62 68,-62q68,0 68,62z', '#C98A44'); S('path', { d: 'M128,356l10,10M154,348l10,10M180,356l8,10', stroke: '#8A5A2C', 'stroke-width': 4, 'stroke-linecap': 'round' }, svg); shine(svg, 'M44,282l34,-10', 5, .25);
+    S('path', { d: 'M50,250h220', stroke: OUT, 'stroke-width': 14, 'stroke-linecap': 'round' }, svg); S('path', { d: 'M50,250h220', stroke: '#D9DEE3', 'stroke-width': 7, 'stroke-linecap': 'round' }, svg);
     P(svg, 'M160,14l9,-13h-18z', '#F2B63C', { 'stroke-width': 3 }); const knob = S('g', {}, S('g', { transform: 'translate(25.6,-22) scale(.84)' }, svg));
     S('circle', { cx: 160, cy: 166, r: 124, fill: '#5B3A22', opacity: .2 }, knob); S('circle', { cx: 160, cy: 160, r: 120, fill: '#F6EFE2', stroke: OUT, 'stroke-width': 5 }, knob); S('circle', { cx: 160, cy: 160, r: 104, fill: 'none', stroke: '#E3D8C4', 'stroke-width': 6 }, knob);
     S('circle', { cx: 160, cy: 160, r: 78, fill: '#6B4630', stroke: OUT, 'stroke-width': 5 }, knob); S('circle', { cx: 160, cy: 160, r: 60, fill: '#7C5238' }, knob); shine(knob, 'M112,140a52,52 0 0 1 40,-32', 7, .3);
@@ -550,10 +583,10 @@ CH.dial = {
       dragger(api.root, { move: (q, d, last) => { if (Math.hypot(q.x - 160, q.y - 112) < 16) return; let dl = raw(q) - raw(last); if (dl > 180) dl -= 360; if (dl < -180) dl += 360; Sense.s.roll = clamp(Sense.s.roll + dl, -180, 180); knob.setAttribute('transform', `rotate(${Sense.s.roll} 160 160)`); } }); }
     const word = label(svg, 160, 120, '', '#FFFBF2', 20); word.removeAttribute('stroke');
     api.btn('Set the oven', false);
-    const stop = ticker(() => { ok = Sense.upright(); a = Math.abs(Sense.roll()); heat.setAttribute('opacity', 0.15 + 0.75 * Math.min(1, a / 180)); word.textContent = ok ? '' : 'Hold it upright'; api.btn('Set the oven', ok); });
+    const stop = ticker(() => { ok = Sense.upright(); a = Math.abs(Sense.roll()); heat.setAttribute('opacity', 0.08 + 0.4 * Math.min(1, a / 180)); word.textContent = ok ? '' : 'Hold it upright'; api.btn('Set the oven', ok); });
     return {
       ready: () => ok, answer: () => a, primary: () => ok ? a : undefined,
-      reveal() { stop(); svg.innerHTML = ''; word.textContent = ''; api.bg('cloth'); const c = { x: 160, y: 190 }, R = 120, end = (deg, r) => [c.x + Math.sin(rad(deg)) * r, c.y - Math.cos(rad(deg)) * r];
+      reveal() { stop(); svg.innerHTML = ''; word.textContent = ''; P(svg, 'M26,6h268a20,20 0 0 1 20,20v230a20,20 0 0 1 -20,20h-268a20,20 0 0 1 -20,-20v-230a20,20 0 0 1 20,-20z', '#FFFBF2'); const c = { x: 160, y: 190 }, R = 120, end = (deg, r) => [c.x + Math.sin(rad(deg)) * r, c.y - Math.cos(rad(deg)) * r];
         S('path', { d: `M${end(-90, R)} A${R},${R} 0 0 1 ${end(90, R)}`, class: 'ink-s', 'stroke-width': 3, 'stroke-dasharray': '2 8' }, svg);
         S('line', { x1: c.x, y1: c.y, x2: c.x, y2: c.y - R, class: 'ink-s', 'stroke-width': 4 }, svg);
         const dA = Math.min(p.deg, 180), [tx, ty] = end(dA, R), [yx, yy] = end(a, R);
@@ -820,6 +853,81 @@ CH.proof = {
   score(p, r) { const d = r - p.m, e = Math.abs(d) / p.m * 100; return { err: e, off: e < 0.5 ? 'Proofed to perfection' : `×${r.toFixed(2)}, ${d > 0 ? 'over' : 'under'}-proofed by ${fmt(e)}%` }; }
 };
 
+/* ---------- full-screen settings, one per bake ---------- */
+const BIGR = { x: -700, y: -600, width: 1720, height: 1700 };
+const PATTERNS = `
+<pattern id="pWood" width="320" height="64" patternUnits="userSpaceOnUse"><rect width="320" height="64" fill="#DDB07C"/><path d="M0,63h320M210,0v63" stroke="#C08E57" stroke-width="3"/><path d="M20,18q30,-5 70,0M120,40q40,5 70,0M240,24q30,-4 60,0M40,50q20,3 50,0" fill="none" stroke="#CE9E68" stroke-width="2" stroke-linecap="round"/></pattern>
+<pattern id="pDark" width="320" height="70" patternUnits="userSpaceOnUse"><rect width="320" height="70" fill="#B9834F"/><path d="M0,69h320" stroke="#9A6A3C" stroke-width="3"/><path d="M30,24q40,-5 80,0M180,46q40,5 90,0" fill="none" stroke="#A8743F" stroke-width="2" stroke-linecap="round"/></pattern>
+<pattern id="pCloth" width="10" height="44" patternUnits="userSpaceOnUse"><rect width="10" height="44" fill="#F8EEDD"/><rect y="12" width="10" height="20" fill="#EEDFC8"/></pattern>
+<pattern id="pGing" width="44" height="44" patternUnits="userSpaceOnUse"><rect width="44" height="44" fill="#FFF7EC"/><rect width="22" height="44" fill="#EFA9A0" opacity=".45"/><rect width="44" height="22" fill="#EFA9A0" opacity=".45"/></pattern>
+<pattern id="pTile" width="46" height="46" patternUnits="userSpaceOnUse"><rect width="46" height="46" fill="#FBF4E6"/><path d="M0,0h46M0,0v46" stroke="#E7DAC2" stroke-width="3"/><path d="M8,10h10" stroke="#fff" stroke-width="3" stroke-linecap="round"/></pattern>
+<pattern id="pBead" width="30" height="10" patternUnits="userSpaceOnUse"><rect width="30" height="10" fill="#DDE9D5"/><path d="M0,0v10" stroke="#C5D6BC" stroke-width="3"/></pattern>
+<pattern id="pMarble" width="240" height="240" patternUnits="userSpaceOnUse"><rect width="240" height="240" fill="#F4F0EA"/><path d="M0,40q60,30 110,10t130,30M20,150q50,-30 100,0t120,-10M60,0q10,60 -20,120" fill="none" stroke="#E2DBD0" stroke-width="3" stroke-linecap="round"/></pattern>
+<pattern id="pFloor" width="80" height="80" patternUnits="userSpaceOnUse"><rect width="80" height="80" fill="#EFE3CC"/><rect width="40" height="40" fill="#D9C4A0"/><rect x="40" y="40" width="40" height="40" fill="#D9C4A0"/></pattern>`;
+const band = (g, fill, y0, y1) => S('rect', { x: BIGR.x, y: y0, width: BIGR.width, height: y1 - y0, fill }, g);
+const fullR = (g, fill) => S('rect', Object.assign({ fill }, BIGR), g);
+const dust = (g, x, y, rx, ry) => S('ellipse', { cx: x, cy: y, rx, ry, fill: '#FFFBF0', opacity: .75 }, g);
+function jar(g, x, y, w, h, fill, lid) { P(g, `M${x},${y}h${w}v${h - 8}a8,8 0 0 1 -8,8h${16 - w}a8,8 0 0 1 -8,-8z`, fill); P(g, `M${x - 3},${y - 10}h${w + 6}v10h${-w - 6}z`, lid || '#C98F5A', { 'stroke-width': 3 }); shine(g, `M${x + 7},${y + 8}v${h - 24}`, 4, .55); }
+function plant(g, x, y) { P(g, `M${x - 14},${y - 26}h28l-4,26h-20z`, '#C9694D'); [[-12, -36], [0, -46], [12, -36], [-5, -32], [6, -30]].forEach(([a, b], k) => S('circle', { cx: x + a, cy: y + b, r: 11 - k % 2 * 2, fill: k % 2 ? '#8DB866' : '#7FA65A', stroke: OUT, 'stroke-width': 3 }, g)); }
+function pin(g, x, y, len, rot) { const k = S('g', { transform: `translate(${x},${y}) rotate(${rot || 0})` }, g); S('ellipse', { cx: len / 2, cy: 14, rx: len / 2 + 18, ry: 6, fill: '#5B3A22', opacity: .18 }, k); P(k, `M-26,-5h26v10h-26zM${len},-5h26v10h-26z`, '#B5743C', { 'stroke-width': 3.5 }); P(k, `M0,-13h${len}a6,13 0 0 1 0,26h${-len}a6,13 0 0 1 0,-26z`, '#E3B06A'); shine(k, `M12,-6h${len - 40}`, 4, .5); }
+function drawer(g, x, y, w, h) { P(g, `M${x},${y}h${w}v${h}h${-w}z`, '#C48D57', { 'stroke-width': 4 }); S('circle', { cx: x + w / 2, cy: y + h / 2, r: 8, fill: '#F2C24A', stroke: OUT, 'stroke-width': 3 }, g); }
+function shelf(g, y) { P(g, `M${BIGR.x},${y}h${BIGR.width}v12h${-BIGR.width}z`, '#C98F5A'); [-180, 20, 300, 500].forEach(x => P(g, `M${x},${y + 12}v14l14,-14z`, '#B5743C', { 'stroke-width': 3 })); }
+const ENV = {
+  pour(u, f) { fullR(u, 'url(#pTile)'); band(u, '#E9C592', 290, 314); band(u, 'url(#pDark)', 314, 1100); S('path', { d: `M${BIGR.x},290h${BIGR.width}M${BIGR.x},314h${BIGR.width}`, stroke: OUT, 'stroke-width': 4 }, u);
+    shelf(f, -52); jar(f, 24, -108, 40, 56, '#F4D58A'); jar(f, 76, -98, 34, 46, '#E9A7A0'); plant(f, 268, -52); jar(f, 196, -104, 38, 52, '#CFE3DE'); jar(f, -90, -104, 40, 52, '#E9A7A0'); plant(f, 400, -52);
+    S('path', { d: `M${BIGR.x},14h${BIGR.width}`, stroke: '#9AA3AD', 'stroke-width': 5 }, f); [[26, 96, '#D9DEE3'], [60, 76, '#D2A56B']].forEach(([x, len, c], k) => { S('path', { d: `M${x},14v${len}`, stroke: OUT, 'stroke-width': 7, 'stroke-linecap': 'round' }, f); S('path', { d: `M${x},14v${len}`, stroke: c, 'stroke-width': 3, 'stroke-linecap': 'round' }, f); k ? P(f, `M${x - 11},${14 + len}h22v26a11,11 0 0 1 -22,0z`, c) : S('circle', { cx: x, cy: 14 + len + 14, r: 15, fill: c, stroke: OUT, 'stroke-width': 4 }, f); });
+    P(f, 'M22,290v-34a12,12 0 0 1 24,0v34z', '#6B4630'); S('circle', { cx: 34, cy: 238, r: 9, fill: '#6B4630', stroke: OUT, 'stroke-width': 4 }, f); S('circle', { cx: 74, cy: 276, r: 14, fill: '#F6D34E', stroke: OUT, 'stroke-width': 4 }, f); shine(f, 'M66,270q4,-6 10,-6', 3, .7);
+    drawer(f, 20, 340, 130, 70); drawer(f, 170, 340, 130, 70); drawer(f, -130, 340, 130, 70); drawer(f, 320, 340, 130, 70); },
+  dial(u, f) { fullR(u, '#E4DED2'); band(u, '#3A3432', -170, -44); band(u, 'url(#pFloor)', 560, 1100); S('path', { d: `M${BIGR.x},-44h${BIGR.width}M${BIGR.x},560h${BIGR.width}`, stroke: OUT, 'stroke-width': 4 }, u);
+    [70, 250, -110, 430].forEach(x => { S('ellipse', { cx: x, cy: -100, rx: 62, ry: 26, fill: 'none', stroke: '#6A625E', 'stroke-width': 6 }, f); S('ellipse', { cx: x, cy: -100, rx: 36, ry: 15, fill: 'none', stroke: '#6A625E', 'stroke-width': 5 }, f); });
+    P(f, 'M-20,-34h360a14,14 0 0 1 14,14v230h-388v-230a14,14 0 0 1 14,-14z', '#EFEAE0'); [[24, 120, '#E0584A'], [296, 120, '#6DB56D']].forEach(([x, y, c]) => { S('circle', { cx: x, cy: y, r: 9, fill: c, stroke: OUT, 'stroke-width': 3.5 }, f); S('circle', { cx: x - 3, cy: y - 3, r: 2.5, fill: '#fff', opacity: .7 }, f); });
+    P(f, 'M-6,240h332a14,14 0 0 1 14,14v286h-360v-286a14,14 0 0 1 14,-14z', '#D8D2C6'); P(f, 'M24,262h272a12,12 0 0 1 12,12v238h-296v-238a12,12 0 0 1 12,-12z', '#3A2418'); S('path', { d: 'M24,400h284M24,404h284', stroke: '#6A625E', 'stroke-width': 3 }, f);
+    [[90, 512], [228, 512]].forEach(([x, y]) => { P(f, `M${x - 52},${y}q0,-46 52,-46q52,0 52,46z`, '#B97A3C'); S('path', { d: `M${x - 22},${y - 30}l8,9M${x},${y - 34}l8,9`, stroke: '#8A5A2C', 'stroke-width': 4, 'stroke-linecap': 'round' }, f); }); },
+  whisk(u, f) { fullR(u, 'url(#pGing)');
+    P(f, 'M2,-96h132a10,10 0 0 1 10,10v76a10,10 0 0 1 -10,10h-132a10,10 0 0 1 -10,-10v-76a10,10 0 0 1 10,-10z', '#C9B79C'); [[26, -66], [68, -66], [110, -66], [26, -30], [68, -30], [110, -30]].forEach(([x, y], k) => { S('circle', { cx: x, cy: y, r: 17, fill: '#B5A283', stroke: OUT, 'stroke-width': 3 }, f); if (k !== 4) { S('ellipse', { cx: x, cy: y, rx: 13, ry: 15, fill: k % 2 ? '#F6E3C8' : '#FFF8EC', stroke: OUT, 'stroke-width': 3 }, f); S('circle', { cx: x - 4, cy: y - 5, r: 3, fill: '#fff', opacity: .7 }, f); } });
+    S('circle', { cx: 268, cy: -44, r: 40, fill: '#BFDCD4', stroke: OUT, 'stroke-width': 4.5 }, f); S('circle', { cx: 268, cy: -44, r: 29, fill: '#FFFDF5', stroke: '#E6DCC8', 'stroke-width': 3 }, f); P(f, 'M286,-70l30,-34', 'none', { 'stroke-width': 9, stroke: OUT }); S('path', { d: 'M286,-70l30,-34', stroke: '#D9DEE3', 'stroke-width': 4, 'stroke-linecap': 'round' }, f);
+    P(f, 'M250,300q14,-18 28,0q-2,8 -8,2q-6,8 -12,0q-4,6 -8,-2z', '#FFF8EC'); P(f, 'M284,326q10,-20 26,-6q-10,2 -8,8q-10,-4 -10,6z', '#FFF8EC'); S('circle', { cx: 232, cy: 322, r: 9, fill: '#FFBE1F', opacity: .5 }, f);
+    const sp = S('g', { transform: 'translate(40,356) rotate(-28)' }, f); P(sp, 'M0,-6h110v12h-110z', '#D2A56B'); S('ellipse', { cx: 132, cy: 0, rx: 26, ry: 17, fill: '#D2A56B', stroke: OUT, 'stroke-width': 4.5 }, sp); S('ellipse', { cx: 132, cy: 0, rx: 15, ry: 9, fill: '#BF8E54' }, sp);
+    P(f, 'M150,372h96a8,8 0 0 1 8,8v36a8,8 0 0 1 -8,8h-96a8,8 0 0 1 -8,-8v-36a8,8 0 0 1 8,-8z', '#FFFDF5'); P(f, 'M166,380h60v30h-60z', '#F6D34E'); shine(f, 'M172,386h30', 3, .6); dust(f, 60, 300, 22, 8); },
+  flour(u, f) { fullR(u, 'url(#pBead)'); band(u, '#E9C592', 300, 324); band(u, 'url(#pDark)', 324, 1100); S('path', { d: `M${BIGR.x},300h${BIGR.width}M${BIGR.x},324h${BIGR.width}`, stroke: OUT, 'stroke-width': 4 }, u);
+    P(f, 'M104,-520h112v508h-112z', '#EFE2C8'); S('path', { d: 'M150,-90h20M144,-70h32', stroke: '#C9B48E', 'stroke-width': 5, 'stroke-linecap': 'round' }, f); shine(f, 'M114,-200v170', 5, .45);
+    shelf(f, 96); jar(f, 12, 46, 36, 50, '#FFF6E4'); jar(f, 272, 40, 38, 56, '#F4D58A'); jar(f, -80, 44, 38, 52, '#E9A7A0'); jar(f, 380, 44, 38, 52, '#CFE3DE');
+    P(f, 'M270,300v-52q0,-10 14,-10q14,0 14,10v52z', '#9CC4D8'); [[276, 238, -14], [284, 236, 0], [292, 238, 14]].forEach(([x, y, r]) => { const k = S('g', { transform: `rotate(${r} ${x} ${y})` }, f); S('path', { d: `M${x},${y}v-58`, stroke: '#C99A3E', 'stroke-width': 3.5, 'stroke-linecap': 'round' }, k); for (let i = 0; i < 4; i++) P(k, `M${x},${y - 30 - i * 9}q-9,-4 -8,-12q8,2 8,12q9,-4 8,-12q-8,2 -8,12`, '#E8BE55', { 'stroke-width': 2 }); });
+    P(f, 'M10,300v-18h44v18zM16,282v-14h32v14zM22,268v-10h20v10z', '#D9DEE3', { 'stroke-width': 3.5 }); dust(f, 60, 312, 40, 6); dust(f, 250, 314, 30, 5);
+    drawer(f, 20, 350, 130, 70); drawer(f, 170, 350, 130, 70); drawer(f, -130, 350, 130, 70); drawer(f, 320, 350, 130, 70); },
+  level(u, f) { fullR(u, 'url(#pCloth)'); band(u, 'url(#pGing)', 300, 1100); 
+    let sc = `M${BIGR.x},300`; for (let x = BIGR.x; x < BIGR.x + BIGR.width; x += 40) sc += `q20,24 40,0`; P(u, sc + `V280H${BIGR.x}z`, '#FFF7EC', { 'stroke-width': 4 });
+    S('path', { d: 'M-340,-34Q-170,26 0,-20Q160,30 320,-20Q490,26 660,-34', fill: 'none', stroke: OUT, 'stroke-width': 3 }, f);
+    ['#D8342B', '#FFD873', '#5F9482', '#F28FA6'].forEach((c, k) => [-300, -20, 0, 320].forEach((ox, j) => { if (j === 1 || j === 3 && k > 1) return; const x = (j === 2 ? 22 : ox + 30) + k * 74, y = j === 2 ? -8 + Math.sin((k + .5) / 4 * Math.PI) * 20 : -6 + Math.sin((k + .5) / 4 * Math.PI) * 20; P(f, `M${x},${y}h34l-17,34z`, c, { 'stroke-width': 3.5 }); }));
+    S('ellipse', { cx: 44, cy: 294, rx: 34, ry: 7, fill: '#FFFDF5', stroke: OUT, 'stroke-width': 4 }, f); P(f, 'M22,262h44q0,30 -22,30q-22,0 -22,-30z', '#BFDCD4'); S('path', { d: 'M66,268q14,0 12,12q-2,8 -14,6', fill: 'none', stroke: OUT, 'stroke-width': 4 }, f); S('ellipse', { cx: 44, cy: 262, rx: 22, ry: 5, fill: '#8A5A3C', stroke: OUT, 'stroke-width': 3 }, f);
+    S('path', { class: 'steamy', d: 'M38,250q-6,-10 0,-18M50,250q6,-10 0,-18', fill: 'none', stroke: '#fff', 'stroke-width': 4, 'stroke-linecap': 'round', opacity: .8 }, f);
+    S('ellipse', { cx: 160, cy: 392, rx: 70, ry: 26, fill: '#FFFDF5', stroke: OUT, 'stroke-width': 4.5 }, f); S('ellipse', { cx: 160, cy: 392, rx: 48, ry: 17, fill: 'none', stroke: '#E6DCC8', 'stroke-width': 3 }, f); P(f, 'M128,398l62,-16l-8,-14z', '#F4D49A'); S('path', { d: 'M132,396l50,-14', stroke: '#D8483B', 'stroke-width': 3 }, f);
+    P(f, 'M252,372h8v56h-8zM244,340h4v30h-4zM254,340h4v30h-4zM264,340h4v30h-4z', '#D9DEE3', { 'stroke-width': 3 }); },
+  cut(u, f) { fullR(u, 'url(#pWood)'); P(f, 'M-4,-52h328a18,18 0 0 1 18,18v388a18,18 0 0 1 -18,18h-328a18,18 0 0 1 -18,-18v-388a18,18 0 0 1 18,-18z', '#EBCB98'); S('path', { d: 'M10,40q60,-6 120,0M180,300q50,6 110,0M30,200q40,5 80,0', fill: 'none', stroke: '#DDB981', 'stroke-width': 3, 'stroke-linecap': 'round' }, f); S('circle', { cx: 300, cy: -28, r: 9, fill: '#DDB07C', stroke: OUT, 'stroke-width': 3.5 }, f);
+    dust(f, 160, 170, 150, 120); dust(f, 60, 60, 40, 22); dust(f, 270, 290, 44, 20); pin(f, 60, -92, 200, 0);
+    S('circle', { cx: 60, cy: 424, r: 40, fill: '#BFDCD4', stroke: OUT, 'stroke-width': 4.5 }, f); S('circle', { cx: 60, cy: 424, r: 29, fill: '#FFFDF5', stroke: '#E6DCC8', 'stroke-width': 3 }, f);
+    P(f, 'M150,396h90v54h-90z', '#D9DEE3'); P(f, 'M144,384h102v16h-102z', '#B5743C'); shine(f, 'M160,410v30', 4, .7);
+    S('circle', { cx: 292, cy: 426, r: 30, fill: DOUGH, stroke: OUT, 'stroke-width': 4.5 }, f); shine(f, 'M276,414q8,-10 20,-10', 5, .7); S('circle', { cx: -80, cy: 200, r: 34, fill: DOUGH, stroke: OUT, 'stroke-width': 4.5 }, f); pin(f, 380, 120, 150, 80); },
+  timer(u, f) { fullR(u, 'url(#pTile)'); band(u, 'url(#pMarble)', 276, 1100); S('path', { d: `M${BIGR.x},276h${BIGR.width}`, stroke: OUT, 'stroke-width': 4 }, u);
+    shelf(f, -30); plant(f, 40, -30); P(f, 'M206,-30v-58h14v58zM222,-30v-66h16v66zM240,-30v-52h12v52z', '#E9A7A0', { 'stroke-width': 3.5 }); P(f, 'M256,-30l14,-60l14,4l-12,56z', '#9CC4D8', { 'stroke-width': 3.5 }); jar(f, 110, -84, 40, 54, '#F4D58A'); plant(f, -60, -30); jar(f, 380, -84, 40, 54, '#CFE3DE');
+    P(f, 'M20,340h280a10,10 0 0 1 10,10v84a10,10 0 0 1 -10,10h-280a10,10 0 0 1 -10,-10v-84a10,10 0 0 1 10,-10z', '#AEB5BC'); P(f, 'M26,348h268v84h-268z', '#F6ECD8', { 'stroke-width': 3 });
+    [[70, 390, 0], [140, 384, 1], [212, 394, 0], [272, 380, 1]].forEach(([x, y, k]) => { S('circle', { cx: x, cy: y, r: 26, fill: k ? '#D9A45B' : '#E3B46C', stroke: OUT, 'stroke-width': 4 }, f); S('path', { d: `M${x - 10},${y - 6}q10,-10 20,0M${x - 12},${y + 8}q12,8 24,0`, fill: 'none', stroke: '#C4893F', 'stroke-width': 3, 'stroke-linecap': 'round' }, f); });
+    P(f, 'M-90,276v-60q0,-22 26,-22q26,0 26,22v60z', '#E0584A'); P(f, 'M-90,262h52v14h-52z', '#FFF6E4', { 'stroke-width': 3 }); P(f, 'M360,276v-44h40v44z', '#BFDCD4'); S('path', { d: 'M400,244q16,0 14,14q-2,10 -14,8', fill: 'none', stroke: OUT, 'stroke-width': 4 }, f); },
+  chips(u, f) { fullR(u, 'url(#pMarble)'); S('rect', { x: -4, y: 2, width: 336, height: 336, rx: 26, fill: '#5B3A22', opacity: .18 }, f); P(f, 'M10,-14h300a22,22 0 0 1 22,22v304a22,22 0 0 1 -22,22h-300a22,22 0 0 1 -22,-22v-304a22,22 0 0 1 22,-22z', '#B8BEC5'); P(f, 'M14,2h292a10,10 0 0 1 10,10v296a10,10 0 0 1 -10,10h-292a10,10 0 0 1 -10,-10v-296a10,10 0 0 1 10,-10z', '#F6ECD8', { 'stroke-width': 3 }); shine(f, 'M0,10v120', 4, .6);
+    P(f, 'M30,360h260a10,10 0 0 1 10,10v100h-280v-100a10,10 0 0 1 10,-10z', 'none'); for (let x = 46; x < 290; x += 22) S('path', { d: `M${x},362v110`, stroke: '#9AA3AD', 'stroke-width': 3 }, f);
+    [[84, 418], [160, 410], [236, 420]].forEach(([x, y], k) => { S('circle', { cx: x, cy: y, r: 30, fill: k % 2 ? '#F1C98A' : '#EBC07C', stroke: OUT, 'stroke-width': 4 }, f); S('circle', { cx: x, cy: y, r: 9, fill: '#D8483B', stroke: OUT, 'stroke-width': 3 }, f); });
+    S('circle', { cx: 268, cy: -66, r: 36, fill: '#E4F0EE', stroke: OUT, 'stroke-width': 4.5 }, f); S('circle', { cx: 268, cy: -66, r: 27, fill: '#FFFDF8' }, f); shine(f, 'M250,-76q6,-12 18,-14', 4, .9);
+    const sp = S('g', { transform: 'translate(20,-60) rotate(8)' }, f); P(sp, 'M0,-7h90v14h-90z', '#B5743C'); P(sp, 'M90,-22h60v44h-60z', '#D9DEE3'); S('path', { d: 'M104,-12v24M118,-12v24M132,-12v24', stroke: '#9AA3AD', 'stroke-width': 4, 'stroke-linecap': 'round' }, sp);
+    P(f, 'M-110,150q-30,-70 20,-90q50,-10 60,50q4,60 -20,90z', '#E0584A'); P(f, 'M380,60h70v90h-70z', '#F4D58A'); },
+  proof(u, f) { fullR(u, '#FBF1DE'); band(u, 'url(#pBead)', 150, 262); band(u, '#EBCB98', 262, 336); band(u, 'url(#pDark)', 336, 1100); S('path', { d: `M${BIGR.x},150h${BIGR.width}M${BIGR.x},262h${BIGR.width}M${BIGR.x},336h${BIGR.width}`, stroke: OUT, 'stroke-width': 4 }, u);
+    P(f, 'M92,-150h136a10,10 0 0 1 10,10v252a10,10 0 0 1 -10,10h-136a10,10 0 0 1 -10,-10v-252a10,10 0 0 1 10,-10z', '#8A5A3C'); P(f, 'M96,-140h128v236h-128z', '#CFE9F2', { 'stroke-width': 3 }); S('path', { d: 'M160,-140v236M96,-20h128', stroke: '#8A5A3C', 'stroke-width': 7 }, f); S('circle', { cx: 196, cy: 30, r: 20, fill: '#FFF3B8', opacity: .9 }, f); S('path', { d: 'M96,96q30,-30 64,-20q34,-14 64,20z', fill: '#9CC98A' }, f); shine(f, 'M108,-120l30,-14M108,-96l52,-26', 5, .7);
+    P(f, 'M70,-150q20,60 -8,270h-34q10,-150 -8,-270z', '#E9A7A0'); P(f, 'M250,-150q-20,60 8,270h34q-10,-150 8,-270z', '#E9A7A0');
+    P(f, 'M-2,262l8,-82q26,-12 56,0l8,82z', '#EFE2C8'); S('path', { d: 'M8,184q26,10 52,0', fill: 'none', stroke: '#D8C6A4', 'stroke-width': 4 }, f); P(f, 'M26,206q8,-8 16,0q-3,18 -8,24q-5,-6 -8,-24z', '#E2B04A', { 'stroke-width': 2.5 }); shine(f, 'M10,196l-4,50', 4, .5);
+    jar(f, 262, 204, 44, 58, '#F3E6C4', '#E9A7A0'); [[274, 244], [288, 236], [296, 250], [280, 226]].forEach(([x, y]) => S('circle', { cx: x, cy: y, r: 3.5, fill: 'none', stroke: '#D8C6A4', 'stroke-width': 2 }, f));
+    dust(f, 160, 312, 190, 16); dust(f, 40, 290, 44, 9); dust(f, 280, 296, 40, 8); [[20, 318], [70, 326], [250, 322], [300, 312], [120, 328], [210, 330]].forEach(([x, y]) => S('circle', { cx: x, cy: y, r: 2.5, fill: '#FFFBF0' }, f));
+    pin(f, 30, 356, 150, -4); drawer(f, 200, 372, 110, 60); drawer(f, -130, 372, 130, 60); drawer(f, 330, 372, 130, 60); P(f, 'M-90,262v-40h60v40z', '#BFDCD4'); plant(f, 400, 262); }
+};
+
 const IDS = Object.keys(CH);
 const toScore = (id, err) => Math.round(1000 * Math.exp(-err / CH[id].tau)) / 10;
 const grade = s => s >= 97 ? 'top' : s >= 90 ? 'good' : s >= 75 ? 'ok' : s >= 55 ? 'meh' : 'bad';
@@ -919,11 +1027,15 @@ function loadRound() {
   wrap.innerHTML = ''; wrap.classList.remove('locked', 'in'); void wrap.offsetWidth; wrap.classList.add('in'); const cd = document.querySelector('.card'); cd.style.animation = 'none'; void cd.offsetWidth; cd.style.animation = ''; $('#controls').innerHTML = ''; const oldStamp = document.querySelector('.stamp'); if (oldStamp) oldStamp.remove();
   const hint = $('#hint'); hint.classList.remove('res'); hint.textContent = Sense.sim && ch.simHint ? ch.simHint : ch.hint;
   const svg = S('svg', { viewBox: '0 0 320 320', role: 'img', 'aria-label': ch.prompt(r.p) }, wrap);
+  const WOB = '<filter id="ID" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="4" xChannelSelector="R" yChannelSelector="G"/></filter>';
+  const bw = $('#sceneback'); bw.innerHTML = ''; bw.classList.remove('in'); void bw.offsetWidth; bw.classList.add('in');
+  const back = S('svg', { viewBox: '0 0 320 320', 'aria-hidden': 'true' }, bw); S('defs', {}, back).innerHTML = PATTERNS + WOB.replace('ID', 'wobB');
+  ENV[r.id](S('g', {}, back), S('g', { filter: 'url(#wobB)' }, back));
+  S('defs', {}, svg).innerHTML = WOB.replace('ID', 'wob');
+  const art = S('g', { filter: 'url(#wob)' }, svg); TOP = S('g', {}, svg);
   const btn = $('#bMain'); btn.textContent = 'Lock it in'; btn.disabled = true;
-  S('defs', {}, svg).innerHTML = '<filter id="wob" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="4" xChannelSelector="R" yChannelSelector="G"/></filter>';
-  const bgG = S('g', {}, svg), art = S('g', { filter: 'url(#wob)' }, svg); TOP = S('g', {}, svg);
-  const api = { svg: art, root: svg, bg: k => backdrop(bgG, k), controls: $('#controls'), changed() { Snd.tick(); btn.disabled = !Game.inst.ready(); }, btn(label, on) { btn.textContent = label; btn.disabled = !on; }, hint(t) { hint.textContent = t; }, lockNow(a) { lock(a); } };
-  Game.inst = ch.mount(api, r.p);
+  const api = { svg: art, root: svg, bg() {}, controls: $('#controls'), changed() { Snd.tick(); btn.disabled = !Game.inst.ready(); }, btn(label, on) { btn.textContent = label; btn.disabled = !on; }, hint(t) { hint.textContent = t; fitScene(); }, lockNow(a) { lock(a); } };
+  Game.inst = ch.mount(api, r.p); fitScene();
 }
 
 function lock(answer) {
@@ -933,7 +1045,7 @@ function lock(answer) {
   Game.inst.reveal(res); Game.scores.push(s); Game.offs.push(res.off);
   const st = document.createElement('div'); st.className = 'stamp'; st.innerHTML = `<b>${Math.round(s)}</b><span>${verdict(s)}</span>`; $('#under').prepend(st); if (s >= 75) burst(st, s >= 95 ? 34 : s >= 88 ? 22 : 12);
   Snd.thunk(); Snd.score(s); buzz(s >= 90 ? [18, 40, 18] : 22);
-  const hint = $('#hint'); hint.classList.add('res'); hint.textContent = res.off;
+  const hint = $('#hint'); hint.classList.add('res'); hint.textContent = res.off; fitScene();
   if (Game.mode === 'daily') { Store.d.days[Game.day] = { s: Game.scores.slice(), o: Game.offs.slice(), ids: Game.plan.map(x => x.id), done: false }; Store.save(); }
   renderRounds();
   const btn = $('#bMain'); btn.disabled = false; btn.textContent = Game.idx === 3 ? 'See your score' : 'Next';
